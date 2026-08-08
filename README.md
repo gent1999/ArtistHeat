@@ -1,36 +1,57 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# ArtistHeat
 
-## Getting Started
+Next.js (App Router) public site + admin panel. Talks to
+[ServerHeat](https://github.com/gent1999/ServerHeat) exclusively from the
+server (Server Components / Server Functions / `proxy.ts`) -- the browser
+never calls the backend directly, so there's no CORS surface and the API
+URL never reaches the client bundle.
 
-First, run the development server:
+## Setup
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+npm install
+cp .env.local.example .env.local   # if present; otherwise see below
+npm run dev                        # http://localhost:3000
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Requires [ServerHeat](https://github.com/gent1999/ServerHeat) running
+(see its README for the default port) with its database migrated.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+`.env.local`:
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+```
+API_URL=http://localhost:4100
+NEXT_PUBLIC_SITE_NAME=ArtistHeat
+```
 
-## Learn More
+## URL structure
 
-To learn more about Next.js, take a look at the following resources:
+Mirrors the original WordPress permalinks so every existing article URL
+and backlink keeps working:
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+- `/<slug>` -- article (WordPress used `/%postname%/`, flat, no category prefix)
+- `/category/<slug>`, `/tag/<slug>`, `/author/<slug>` -- archives
+- `/admin` -- admin panel (login at `/admin/login`)
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+`src/proxy.ts` 301s legacy `/?p=<id>` links and any old (renamed) article
+slugs to their current URL, sourced from the `redirects` table the
+migration populated.
 
-## Deploy on Vercel
+## Admin panel
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+Session is a single httpOnly cookie holding the backend's JWT, set by the
+`loginAction` Server Function in `src/app/admin/actions.ts`. Currently
+just login + a read-only article list (`/admin/articles`) -- article
+create/edit forms are the natural next step, calling the backend's
+already-built `POST/PUT /api/articles`.
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## Known gaps / next steps
+
+- Article images use plain `<img>`, not `next/image` (would need
+  `images.remotePatterns` configured for the WordPress upload domain, or
+  images rehosted first).
+- No pagination UI yet on category/tag/author archives (the API supports
+  `?page=`, the pages don't expose it).
+- No dark mode -- the site is white by design, not theme-dependent.
+- The "Follow ArtistHeat" widget (social follower counts) is intentionally
+  left out until real handles/counts are provided -- see `src/lib/social.ts`.
