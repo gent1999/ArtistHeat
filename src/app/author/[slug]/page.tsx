@@ -29,7 +29,7 @@ export default async function AuthorPage({ params, searchParams }: Props) {
   const { author, articles } = await loadAuthor(slug, Number(page) || 1);
 
   return (
-    <div className="mx-auto max-w-6xl px-4 py-10">
+    <div className="mx-auto max-w-[1400px] px-4 py-10">
       <h1 className="mb-2 text-3xl font-black">{author.name}</h1>
       {author.bio ? <p className="mb-8 max-w-2xl text-neutral-600">{author.bio}</p> : null}
       <div className="grid grid-cols-1 gap-x-8 gap-y-10 sm:grid-cols-2 lg:grid-cols-3">

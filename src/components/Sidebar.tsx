@@ -1,13 +1,16 @@
 import { NewsletterWidget } from '@/components/NewsletterWidget';
+import { FollowSocial } from '@/components/FollowSocial';
 import { TrendingThisWeek } from '@/components/TrendingThisWeek';
 
-// FollowArtistHeat (fan/follower counts) belongs here too, once real
-// numbers/handles exist in lib/social.ts -- deliberately left out rather
-// than shown with fabricated counts.
+// The "Follow ArtistHeat" fan/follower-count widget from the reference
+// design is deliberately left out -- there's no live source for those
+// numbers, and a hardcoded count just goes stale. FollowSocial below
+// links the real profiles without claiming any follower counts.
 export function Sidebar() {
   return (
     <aside className="flex flex-col gap-6">
       <NewsletterWidget />
+      <FollowSocial />
       <TrendingThisWeek />
     </aside>
   );

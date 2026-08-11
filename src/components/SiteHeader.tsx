@@ -24,7 +24,7 @@ export async function SiteHeader() {
 
   return (
     <header className="border-b border-neutral-200">
-      <div className="mx-auto flex max-w-6xl items-center justify-between gap-6 px-4 py-3">
+      <div className="mx-auto flex max-w-[1400px] items-center justify-between gap-6 px-4 py-3">
         <Link href="/" className="shrink-0">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img src="/logo.png" alt="ArtistHeat" className="h-10 w-auto" />

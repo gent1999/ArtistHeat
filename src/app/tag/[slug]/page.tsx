@@ -29,7 +29,7 @@ export default async function TagPage({ params, searchParams }: Props) {
   const { tag, articles } = await loadTag(slug, Number(page) || 1);
 
   return (
-    <div className="mx-auto max-w-6xl px-4 py-10">
+    <div className="mx-auto max-w-[1400px] px-4 py-10">
       <h1 className="mb-8 text-3xl font-black">#{tag.name}</h1>
       <div className="grid grid-cols-1 gap-x-8 gap-y-10 sm:grid-cols-2 lg:grid-cols-3">
         {articles.map((article) => (
