@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { getSessionToken } from '@/lib/session';
 import { api } from '@/lib/api';
+import { FeaturedStarToggle } from './FeaturedStarToggle';
 
 export default async function AdminArticlesPage() {
   const token = (await getSessionToken())!;
@@ -15,6 +16,7 @@ export default async function AdminArticlesPage() {
             <th className="py-2 font-medium">Title</th>
             <th className="py-2 font-medium">Status</th>
             <th className="py-2 font-medium">Author</th>
+            <th className="py-2 text-right font-medium">Featured</th>
           </tr>
         </thead>
         <tbody>
@@ -37,6 +39,9 @@ export default async function AdminArticlesPage() {
                 </span>
               </td>
               <td className="py-2 text-neutral-600">{article.author?.name ?? '—'}</td>
+              <td className="py-2">
+                <FeaturedStarToggle articleId={article.id} isFeatured={Boolean(article.isFeatured)} featuredOrder={article.featuredOrder} />
+              </td>
             </tr>
           ))}
         </tbody>

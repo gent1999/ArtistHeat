@@ -1,8 +1,10 @@
 'use server';
 
 import { redirect } from 'next/navigation';
+import { revalidatePath } from 'next/cache';
 import { ApiError, api } from '@/lib/api';
-import { clearSessionToken, setSessionToken } from '@/lib/session';
+import { clearSessionToken, setSessionToken, getSessionToken } from '@/lib/session';
+import { slugify } from '@/lib/format';
 
 export async function loginAction(_prevState: { error?: string } | undefined, formData: FormData) {
   const email = String(formData.get('email') || '');
@@ -24,4 +26,149 @@ export async function loginAction(_prevState: { error?: string } | undefined, fo
 export async function logoutAction() {
   await clearSessionToken();
   redirect('/admin/login');
+}
+
+// Resolves free-typed, comma-separated tag names to tag IDs -- matching
+// existing tags case-insensitively and creating any that don't exist yet,
+// so the admin never has to know a tag's exact stored name/slug.
+async function resolveTagIds(rawTags: string, token: string): Promise<number[]> {
+  const names = [...new Set(rawTags.split(',').map((t) => t.trim()).filter(Boolean))];
+  if (names.length === 0) return [];
+
+  const { tags: existing } = await api.listTags(token);
+  const byName = new Map(existing.map((t) => [t.name.toLowerCase(), t.id]));
+
+  const ids: number[] = [];
+  for (const name of names) {
+    const existingId = byName.get(name.toLowerCase());
+    if (existingId) {
+      ids.push(existingId);
+      continue;
+    }
+    const { tag } = await api.createTag({ name, slug: slugify(name) }, token);
+    ids.push(tag.id);
+  }
+  return ids;
+}
+
+// Same idea as resolveTagIds, but for the single free-typed author name --
+// reuse an existing byline case-insensitively, or create one on the fly.
+async function resolveAuthorId(rawName: string, token: string): Promise<number | null> {
+  const name = rawName.trim();
+  if (!name) return null;
+
+  const { authors: existing } = await api.listAuthors(token);
+  const match = existing.find((a) => a.name.toLowerCase() === name.toLowerCase());
+  if (match) return match.id;
+
+  const { author } = await api.createAuthor({ name, slug: slugify(name) }, token);
+  return author.id;
+}
+
+export async function createArticleAction(_prevState: { error?: string } | undefined, formData: FormData) {
+  const token = await getSessionToken();
+  if (!token) redirect('/admin/login');
+
+  const title = String(formData.get('title') || '').trim();
+  const slug = String(formData.get('slug') || '').trim();
+  const content = String(formData.get('content') || '').trim();
+
+  if (!title || !slug || !content) {
+    return { error: 'Title, slug, and content are required.' };
+  }
+
+  try {
+    let featuredImageId: number | null = null;
+    const imageUrl = String(formData.get('featuredImageUrl') || '').trim();
+    if (imageUrl) {
+      const altText = String(formData.get('featuredImageAlt') || '').trim() || null;
+      const { media } = await api.createMedia({ sourceUrl: imageUrl, altText }, token);
+      featuredImageId = media.id;
+    }
+
+    const tagIds = await resolveTagIds(String(formData.get('tags') || ''), token);
+    const categoryIds = formData.getAll('categoryIds').map((v) => Number(v));
+    const primaryCategoryIdRaw = String(formData.get('primaryCategoryId') || '');
+    const primaryCategoryId = primaryCategoryIdRaw ? Number(primaryCategoryIdRaw) : categoryIds[0] ?? null;
+
+    const authorId = await resolveAuthorId(String(formData.get('author') || ''), token);
+    const featuredOrderRaw = String(formData.get('featuredOrder') || '');
+
+    await api.createArticle(
+      {
+        title,
+        slug,
+        excerpt: String(formData.get('excerpt') || '').trim() || null,
+        content,
+        status: 'published',
+        authorId,
+        featuredImageId,
+        seoTitle: String(formData.get('seoTitle') || '').trim() || null,
+        seoDescription: String(formData.get('seoDescription') || '').trim() || null,
+        seoFocusKeyword: String(formData.get('seoFocusKeyword') || '').trim() || null,
+        isFeatured: formData.get('isFeatured') === 'on',
+        featuredOrder: featuredOrderRaw ? Number(featuredOrderRaw) : null,
+        categoryIds,
+        primaryCategoryId,
+        tagIds,
+      },
+      token
+    );
+  } catch (err) {
+    if (err instanceof ApiError) return { error: err.message };
+    return { error: 'Something went wrong creating the article. Try again.' };
+  }
+
+  redirect('/admin/articles');
+}
+
+// featuredOrder = HERO_ORDER marks the single "big featured" hero article;
+// isFeatured=true with featuredOrder=null marks one of the (up to 3)
+// regular featured side cards. Mirrors how FeaturedSection/home.ts sort
+// and slice the featured set on the public site.
+const HERO_ORDER = 1;
+const MAX_REGULAR_FEATURED = 3;
+
+export type FeaturedLevel = 0 | 1 | 2;
+
+// Cycles an article through unfeatured -> regular featured (1 star) ->
+// big featured / hero (2 stars) -> unfeatured. "Only 1 hero" is enforced
+// by refusing to steal the slot: trying to promote a 2nd article to hero
+// while one already exists resets that article to unfeatured instead
+// (skips the hero state rather than bumping whoever currently holds it).
+// "Only 3 regular" is enforced the same way -- refusing the change rather
+// than guessing which of the existing 3 to bump.
+export async function setFeaturedLevelAction(articleId: number, level: FeaturedLevel): Promise<{ error?: string }> {
+  const token = await getSessionToken();
+  if (!token) redirect('/admin/login');
+
+  try {
+    if (level === 2) {
+      const { articles: currentlyFeatured } = await api.listArticles({ isFeatured: true, pageSize: 10 }, token);
+      const currentHero = currentlyFeatured.find((a) => a.featuredOrder === HERO_ORDER && a.id !== articleId);
+      if (currentHero) {
+        await api.updateArticle(articleId, { isFeatured: false, featuredOrder: null }, token);
+        revalidatePath('/admin/articles');
+        revalidatePath('/');
+        return { error: 'Only one article can be the big feature. Un-feature it first to promote a different one.' };
+      }
+      await api.updateArticle(articleId, { isFeatured: true, featuredOrder: HERO_ORDER }, token);
+    } else if (level === 1) {
+      const { articles: currentlyFeatured } = await api.listArticles({ isFeatured: true, pageSize: 10 }, token);
+      const regularCount = currentlyFeatured.filter((a) => a.featuredOrder !== HERO_ORDER && a.id !== articleId).length;
+      if (regularCount >= MAX_REGULAR_FEATURED) {
+        return { error: `Only ${MAX_REGULAR_FEATURED} articles can be regularly featured at once. Un-feature one first.` };
+      }
+      await api.updateArticle(articleId, { isFeatured: true, featuredOrder: null }, token);
+    } else {
+      await api.updateArticle(articleId, { isFeatured: false, featuredOrder: null }, token);
+    }
+  } catch (err) {
+    if (err instanceof ApiError) return { error: err.message };
+    return { error: 'Something went wrong updating the featured status.' };
+  }
+
+  revalidatePath('/admin/articles');
+  revalidatePath('/');
+  return {};
 }

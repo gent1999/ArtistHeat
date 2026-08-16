@@ -95,15 +95,43 @@ export interface Author {
   bio: string | null;
 }
 
+export interface Media {
+  id: number;
+  sourceUrl: string;
+  altText: string | null;
+}
+
+export interface ArticleWriteInput {
+  title: string;
+  slug: string;
+  excerpt?: string | null;
+  content: string;
+  status: 'draft' | 'published';
+  authorId?: number | null;
+  featuredImageId?: number | null;
+  seoTitle?: string | null;
+  seoDescription?: string | null;
+  seoFocusKeyword?: string | null;
+  isFeatured?: boolean;
+  featuredOrder?: number | null;
+  categoryIds: number[];
+  primaryCategoryId?: number | null;
+  tagIds: number[];
+}
+
 export const api = {
   getHome: () => request<HomeData>('/api/home', { cache: 'no-store' }),
 
-  listArticles: (params: { page?: number; pageSize?: number; category?: string; tag?: string } = {}, token?: string) => {
+  listArticles: (
+    params: { page?: number; pageSize?: number; category?: string; tag?: string; isFeatured?: boolean } = {},
+    token?: string
+  ) => {
     const qs = new URLSearchParams();
     if (params.page) qs.set('page', String(params.page));
     if (params.pageSize) qs.set('pageSize', String(params.pageSize));
     if (params.category) qs.set('category', params.category);
     if (params.tag) qs.set('tag', params.tag);
+    if (params.isFeatured !== undefined) qs.set('isFeatured', String(params.isFeatured));
     return request<{ articles: ArticleSummary[]; pagination: Pagination }>(`/api/articles?${qs}`, { token, cache: 'no-store' });
   },
 
@@ -140,4 +168,23 @@ export const api = {
     }),
 
   me: (token: string) => request<{ admin: { id: number; email: string; name: string; role: string } }>('/api/auth/me', { token }),
+
+  listAuthors: (token?: string) => request<{ authors: Author[] }>('/api/authors', { token, cache: 'no-store' }),
+
+  listTags: (token?: string) => request<{ tags: Tag[] }>('/api/tags', { token, cache: 'no-store' }),
+
+  createMedia: (data: { sourceUrl: string; altText?: string | null }, token: string) =>
+    request<{ media: Media }>('/api/media', { method: 'POST', body: JSON.stringify(data), token }),
+
+  createTag: (data: { name: string; slug: string }, token: string) =>
+    request<{ tag: Tag }>('/api/tags', { method: 'POST', body: JSON.stringify(data), token }),
+
+  createAuthor: (data: { name: string; slug: string }, token: string) =>
+    request<{ author: Author }>('/api/authors', { method: 'POST', body: JSON.stringify(data), token }),
+
+  createArticle: (data: ArticleWriteInput, token: string) =>
+    request<{ article: ArticleDetail }>('/api/articles', { method: 'POST', body: JSON.stringify(data), token }),
+
+  updateArticle: (id: number, data: Partial<ArticleWriteInput>, token: string) =>
+    request<{ article: ArticleDetail }>(`/api/articles/${id}`, { method: 'PUT', body: JSON.stringify(data), token }),
 };
