@@ -5,9 +5,6 @@ import { FacebookIcon, InstagramIcon, PinterestIcon } from './icons';
 
 const SOCIAL_ICONS = { facebook: FacebookIcon, instagram: InstagramIcon, pinterest: PinterestIcon } as const;
 
-// These point at pages the site doesn't have yet (About/Contact/Disclaimer
-// are content, not something to fabricate) -- they're here because the
-// reference design has them, but they'll 404 until those pages exist.
 const QUICK_LINKS = [
   { label: 'Home', href: '/' },
   { label: 'About', href: '/about' },
