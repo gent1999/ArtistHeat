@@ -2,9 +2,25 @@
 
 import { useState, useActionState } from 'react';
 import { useFormStatus } from 'react-dom';
-import { createArticleAction } from '../../../actions';
+import { createArticleAction, getUploadSignatureAction } from '../../../actions';
 import { slugify } from '@/lib/format';
 import type { Author, Category } from '@/lib/api';
+
+async function uploadImageToCloudinary(file: File): Promise<string> {
+  const { cloudName, apiKey, timestamp, signature, folder } = await getUploadSignatureAction();
+
+  const body = new FormData();
+  body.append('file', file);
+  body.append('api_key', apiKey);
+  body.append('timestamp', String(timestamp));
+  body.append('folder', folder);
+  body.append('signature', signature);
+
+  const res = await fetch(`https://api.cloudinary.com/v1_1/${cloudName}/image/upload`, { method: 'POST', body });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data?.error?.message || 'Upload failed');
+  return data.secure_url as string;
+}
 
 function SubmitButton() {
   const { pending } = useFormStatus();
@@ -36,6 +52,25 @@ export function NewArticleForm({
   const [slug, setSlug] = useState('');
   const [slugTouched, setSlugTouched] = useState(false);
   const [checkedCategoryIds, setCheckedCategoryIds] = useState<number[]>([]);
+  const [featuredImageUrl, setFeaturedImageUrl] = useState('');
+  const [uploading, setUploading] = useState(false);
+  const [uploadError, setUploadError] = useState<string | null>(null);
+
+  async function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    e.target.value = '';
+    if (!file) return;
+    setUploading(true);
+    setUploadError(null);
+    try {
+      const url = await uploadImageToCloudinary(file);
+      setFeaturedImageUrl(url);
+    } catch (err) {
+      setUploadError(err instanceof Error ? err.message : 'Upload failed');
+    } finally {
+      setUploading(false);
+    }
+  }
 
   return (
     <form action={formAction} className="flex max-w-2xl flex-col gap-6">
@@ -103,19 +138,44 @@ export function NewArticleForm({
         <p className="mt-1 text-xs text-neutral-500">Existing bylines are reused; a new name creates one.</p>
       </div>
 
-      <div className="grid grid-cols-2 gap-4">
-        <div>
-          <label htmlFor="featuredImageUrl" className={labelClass}>
-            Featured image URL
-          </label>
-          <input id="featuredImageUrl" name="featuredImageUrl" type="url" placeholder="https://..." className={inputClass} />
+      <div>
+        <label className={labelClass}>Featured image</label>
+        <div className="grid grid-cols-2 gap-4">
+          <div>
+            <label htmlFor="featuredImageUrl" className="mb-1 block text-xs text-neutral-600">
+              Image URL
+            </label>
+            <input
+              id="featuredImageUrl"
+              name="featuredImageUrl"
+              type="url"
+              placeholder="https://..."
+              className={inputClass}
+              value={featuredImageUrl}
+              onChange={(e) => setFeaturedImageUrl(e.target.value)}
+            />
+          </div>
+          <div>
+            <label htmlFor="featuredImageAlt" className="mb-1 block text-xs text-neutral-600">
+              Image alt text
+            </label>
+            <input id="featuredImageAlt" name="featuredImageAlt" className={inputClass} />
+          </div>
         </div>
-        <div>
-          <label htmlFor="featuredImageAlt" className={labelClass}>
-            Image alt text
+
+        <div className="mt-2 flex items-center gap-3">
+          <span className="text-xs text-neutral-500">or</span>
+          <label className="cursor-pointer border border-neutral-300 px-3 py-1.5 text-xs font-semibold hover:border-red-600 hover:text-red-600">
+            {uploading ? 'Uploading…' : 'Upload image'}
+            <input type="file" accept="image/*" className="hidden" disabled={uploading} onChange={handleFileChange} />
           </label>
-          <input id="featuredImageAlt" name="featuredImageAlt" className={inputClass} />
+          {uploadError ? <span className="text-xs text-red-600">{uploadError}</span> : null}
         </div>
+
+        {featuredImageUrl ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img src={featuredImageUrl} alt="" className="mt-3 h-32 w-auto border border-neutral-300 object-cover" />
+        ) : null}
       </div>
 
       <fieldset>

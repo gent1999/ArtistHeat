@@ -65,6 +65,17 @@ async function resolveAuthorId(rawName: string, token: string): Promise<number |
   return author.id;
 }
 
+// Hands the client a short-lived, upload-only Cloudinary signature so the
+// browser can upload the file directly (never through our own server --
+// Vercel's serverless functions cap request bodies well under typical
+// image sizes). The admin JWT itself never reaches the browser; only this
+// scoped signature does.
+export async function getUploadSignatureAction() {
+  const token = await getSessionToken();
+  if (!token) redirect('/admin/login');
+  return api.getUploadSignature(token);
+}
+
 export async function createArticleAction(_prevState: { error?: string } | undefined, formData: FormData) {
   const token = await getSessionToken();
   if (!token) redirect('/admin/login');

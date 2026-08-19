@@ -176,6 +176,12 @@ export const api = {
   createMedia: (data: { sourceUrl: string; altText?: string | null }, token: string) =>
     request<{ media: Media }>('/api/media', { method: 'POST', body: JSON.stringify(data), token }),
 
+  getUploadSignature: (token: string) =>
+    request<{ cloudName: string; apiKey: string; timestamp: number; signature: string; folder: string }>(
+      '/api/media/upload-signature',
+      { method: 'POST', token }
+    ),
+
   createTag: (data: { name: string; slug: string }, token: string) =>
     request<{ tag: Tag }>('/api/tags', { method: 'POST', body: JSON.stringify(data), token }),
 
