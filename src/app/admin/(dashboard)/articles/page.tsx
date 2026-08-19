@@ -17,6 +17,7 @@ export default async function AdminArticlesPage() {
             <th className="py-2 font-medium">Status</th>
             <th className="py-2 font-medium">Author</th>
             <th className="py-2 text-right font-medium">Featured</th>
+            <th className="py-2 text-right font-medium">Edit</th>
           </tr>
         </thead>
         <tbody>
@@ -41,6 +42,11 @@ export default async function AdminArticlesPage() {
               <td className="py-2 text-neutral-600">{article.author?.name ?? '—'}</td>
               <td className="py-2">
                 <FeaturedStarToggle articleId={article.id} isFeatured={Boolean(article.isFeatured)} featuredOrder={article.featuredOrder} />
+              </td>
+              <td className="py-2 text-right">
+                <Link href={`/admin/articles/${article.slug}/edit`} className="text-xs font-semibold text-red-600 hover:underline">
+                  Edit
+                </Link>
               </td>
             </tr>
           ))}

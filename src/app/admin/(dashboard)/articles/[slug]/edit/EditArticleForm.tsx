@@ -2,10 +2,9 @@
 
 import { useState, useActionState } from 'react';
 import { useFormStatus } from 'react-dom';
-import { createArticleAction } from '../../../actions';
-import { slugify } from '@/lib/format';
+import { updateArticleAction } from '../../../../actions';
 import { uploadImageToCloudinary } from '@/lib/upload';
-import type { Author, Category } from '@/lib/api';
+import type { Author, Category, ArticleDetail } from '@/lib/api';
 
 function SubmitButton() {
   const { pending } = useFormStatus();
@@ -15,7 +14,7 @@ function SubmitButton() {
       disabled={pending}
       className="bg-red-600 px-5 py-2 text-sm font-semibold text-white hover:bg-red-700 disabled:opacity-60"
     >
-      {pending ? 'Publishing…' : 'Publish Article'}
+      {pending ? 'Saving…' : 'Save Changes'}
     </button>
   );
 }
@@ -23,21 +22,24 @@ function SubmitButton() {
 const inputClass = 'w-full border border-neutral-300 px-3 py-2 text-sm focus:border-red-600 focus:outline-none';
 const labelClass = 'mb-1 block text-sm font-medium';
 
-export function NewArticleForm({
+export function EditArticleForm({
+  article,
   authors,
   categories,
   existingTagNames,
 }: {
+  article: ArticleDetail;
   authors: Author[];
   categories: Category[];
   existingTagNames: string[];
 }) {
-  const [state, formAction] = useActionState(createArticleAction, undefined);
-  const [title, setTitle] = useState('');
-  const [slug, setSlug] = useState('');
-  const [slugTouched, setSlugTouched] = useState(false);
-  const [checkedCategoryIds, setCheckedCategoryIds] = useState<number[]>([]);
-  const [featuredImageUrl, setFeaturedImageUrl] = useState('');
+  const updateWithId = updateArticleAction.bind(null, article.id, article.slug);
+  const [state, formAction] = useActionState(updateWithId, undefined);
+  const [slug, setSlug] = useState(article.slug);
+  const initialCategoryIds = (article.articleCategories ?? []).map((ac) => ac.category.id);
+  const initialPrimaryId = (article.articleCategories ?? []).find((ac) => ac.isPrimary)?.category.id ?? null;
+  const [checkedCategoryIds, setCheckedCategoryIds] = useState<number[]>(initialCategoryIds);
+  const [featuredImageUrl, setFeaturedImageUrl] = useState(article.featuredImage?.sourceUrl ?? '');
   const [uploading, setUploading] = useState(false);
   const [uploadError, setUploadError] = useState<string | null>(null);
 
@@ -59,21 +61,14 @@ export function NewArticleForm({
 
   return (
     <form action={formAction} className="flex max-w-2xl flex-col gap-6">
+      <input type="hidden" name="originalFeaturedImageId" value={article.featuredImage?.id ?? ''} />
+      <input type="hidden" name="originalFeaturedImageUrl" value={article.featuredImage?.sourceUrl ?? ''} />
+
       <div>
         <label htmlFor="title" className={labelClass}>
           Title
         </label>
-        <input
-          id="title"
-          name="title"
-          required
-          className={inputClass}
-          value={title}
-          onChange={(e) => {
-            setTitle(e.target.value);
-            if (!slugTouched) setSlug(slugify(e.target.value));
-          }}
-        />
+        <input id="title" name="title" required className={inputClass} defaultValue={article.title} />
       </div>
 
       <div>
@@ -88,33 +83,47 @@ export function NewArticleForm({
           title="Lowercase letters, numbers, and hyphens only"
           className={inputClass}
           value={slug}
-          onChange={(e) => {
-            setSlug(e.target.value);
-            setSlugTouched(true);
-          }}
+          onChange={(e) => setSlug(e.target.value)}
         />
-        <p className="mt-1 text-xs text-neutral-500">Article will live at /{slug || '...'}</p>
+        <p className="mt-1 text-xs text-neutral-500">
+          Article lives at /{slug || '...'}
+          {slug !== article.slug ? ' -- changing this moves the URL and breaks old links to it.' : ''}
+        </p>
       </div>
 
       <div>
         <label htmlFor="excerpt" className={labelClass}>
           Excerpt (optional)
         </label>
-        <textarea id="excerpt" name="excerpt" rows={2} className={inputClass} />
+        <textarea id="excerpt" name="excerpt" rows={2} className={inputClass} defaultValue={article.excerpt ?? ''} />
       </div>
 
       <div>
         <label htmlFor="content" className={labelClass}>
           Content (HTML)
         </label>
-        <textarea id="content" name="content" required rows={16} className={`${inputClass} font-mono`} />
+        <textarea
+          id="content"
+          name="content"
+          required
+          rows={16}
+          className={`${inputClass} font-mono`}
+          defaultValue={article.content}
+        />
       </div>
 
       <div>
         <label htmlFor="author" className={labelClass}>
           Author
         </label>
-        <input id="author" name="author" list="existing-authors" placeholder="Author name" className={inputClass} />
+        <input
+          id="author"
+          name="author"
+          list="existing-authors"
+          placeholder="Author name"
+          className={inputClass}
+          defaultValue={article.author?.name ?? ''}
+        />
         <datalist id="existing-authors">
           {authors.map((author) => (
             <option key={author.id} value={author.name} />
@@ -144,7 +153,12 @@ export function NewArticleForm({
             <label htmlFor="featuredImageAlt" className="mb-1 block text-xs text-neutral-600">
               Image alt text
             </label>
-            <input id="featuredImageAlt" name="featuredImageAlt" className={inputClass} />
+            <input
+              id="featuredImageAlt"
+              name="featuredImageAlt"
+              className={inputClass}
+              defaultValue={article.featuredImage?.altText ?? ''}
+            />
           </div>
         </div>
 
@@ -172,6 +186,7 @@ export function NewArticleForm({
                 type="checkbox"
                 name="categoryIds"
                 value={category.id}
+                defaultChecked={initialCategoryIds.includes(category.id)}
                 onChange={(e) => {
                   setCheckedCategoryIds((prev) =>
                     e.target.checked ? [...prev, category.id] : prev.filter((id) => id !== category.id)
@@ -189,7 +204,7 @@ export function NewArticleForm({
           <label htmlFor="primaryCategoryId" className={labelClass}>
             Primary category
           </label>
-          <select id="primaryCategoryId" name="primaryCategoryId" className={inputClass}>
+          <select id="primaryCategoryId" name="primaryCategoryId" className={inputClass} defaultValue={initialPrimaryId ?? undefined}>
             {checkedCategoryIds.map((id) => {
               const category = categories.find((c) => c.id === id);
               return category ? (
@@ -206,7 +221,14 @@ export function NewArticleForm({
         <label htmlFor="tags" className={labelClass}>
           Tags (comma-separated)
         </label>
-        <input id="tags" name="tags" list="existing-tags" placeholder="hip-hop, interviews, 2026" className={inputClass} />
+        <input
+          id="tags"
+          name="tags"
+          list="existing-tags"
+          placeholder="hip-hop, interviews, 2026"
+          className={inputClass}
+          defaultValue={(article.articleTags ?? []).map((at) => at.tag.name).join(', ')}
+        />
         <datalist id="existing-tags">
           {existingTagNames.map((name) => (
             <option key={name} value={name} />
@@ -215,18 +237,9 @@ export function NewArticleForm({
         <p className="mt-1 text-xs text-neutral-500">Existing tags will be reused; anything new gets created.</p>
       </div>
 
-      <div className="flex items-center gap-6 border border-neutral-300 p-3">
-        <label className="flex items-center gap-2 text-sm font-medium">
-          <input type="checkbox" name="isFeatured" />
-          Feature on homepage
-        </label>
-        <div className="flex items-center gap-2">
-          <label htmlFor="featuredOrder" className="text-sm text-neutral-600">
-            Order
-          </label>
-          <input id="featuredOrder" name="featuredOrder" type="number" min={1} className="w-20 border border-neutral-300 px-2 py-1 text-sm" />
-        </div>
-      </div>
+      <p className="text-xs text-neutral-500">
+        Featured/homepage placement is managed from the star icons on the Articles list, not here.
+      </p>
 
       <details className="border border-neutral-300 p-3">
         <summary className="cursor-pointer text-sm font-medium">SEO (optional)</summary>
@@ -235,19 +248,30 @@ export function NewArticleForm({
             <label htmlFor="seoTitle" className={labelClass}>
               SEO title
             </label>
-            <input id="seoTitle" name="seoTitle" className={inputClass} />
+            <input id="seoTitle" name="seoTitle" className={inputClass} defaultValue={article.seoTitle ?? ''} />
           </div>
           <div>
             <label htmlFor="seoDescription" className={labelClass}>
               SEO description
             </label>
-            <textarea id="seoDescription" name="seoDescription" rows={2} className={inputClass} />
+            <textarea
+              id="seoDescription"
+              name="seoDescription"
+              rows={2}
+              className={inputClass}
+              defaultValue={article.seoDescription ?? ''}
+            />
           </div>
           <div>
             <label htmlFor="seoFocusKeyword" className={labelClass}>
               Focus keyword
             </label>
-            <input id="seoFocusKeyword" name="seoFocusKeyword" className={inputClass} />
+            <input
+              id="seoFocusKeyword"
+              name="seoFocusKeyword"
+              className={inputClass}
+              defaultValue={article.seoFocusKeyword ?? ''}
+            />
           </div>
         </div>
       </details>

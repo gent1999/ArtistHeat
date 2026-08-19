@@ -133,6 +133,81 @@ export async function createArticleAction(_prevState: { error?: string } | undef
   redirect('/admin/articles');
 }
 
+// Editing intentionally never touches status/isFeatured/featuredOrder --
+// featuring is exclusively managed by the star toggle on the articles list
+// (setFeaturedLevelAction below), so this can't drift out of sync with its
+// max-1-hero/max-3-regular enforcement.
+export async function updateArticleAction(
+  articleId: number,
+  currentSlug: string,
+  _prevState: { error?: string } | undefined,
+  formData: FormData
+) {
+  const token = await getSessionToken();
+  if (!token) redirect('/admin/login');
+
+  const title = String(formData.get('title') || '').trim();
+  const slug = String(formData.get('slug') || '').trim();
+  const content = String(formData.get('content') || '').trim();
+
+  if (!title || !slug || !content) {
+    return { error: 'Title, slug, and content are required.' };
+  }
+
+  try {
+    // Only create a new Media row if the image actually changed -- otherwise
+    // every save-without-touching-the-image would leave behind an orphaned
+    // duplicate pointing at the same URL.
+    const newImageUrl = String(formData.get('featuredImageUrl') || '').trim();
+    const originalImageUrl = String(formData.get('originalFeaturedImageUrl') || '').trim();
+    const originalImageIdRaw = String(formData.get('originalFeaturedImageId') || '').trim();
+    let featuredImageId: number | null = originalImageIdRaw ? Number(originalImageIdRaw) : null;
+
+    if (newImageUrl && newImageUrl !== originalImageUrl) {
+      const altText = String(formData.get('featuredImageAlt') || '').trim() || null;
+      const { media } = await api.createMedia({ sourceUrl: newImageUrl, altText }, token);
+      featuredImageId = media.id;
+    } else if (!newImageUrl) {
+      featuredImageId = null;
+    }
+
+    const tagIds = await resolveTagIds(String(formData.get('tags') || ''), token);
+    const categoryIds = formData.getAll('categoryIds').map((v) => Number(v));
+    const primaryCategoryIdRaw = String(formData.get('primaryCategoryId') || '');
+    const primaryCategoryId = primaryCategoryIdRaw ? Number(primaryCategoryIdRaw) : categoryIds[0] ?? null;
+
+    const authorId = await resolveAuthorId(String(formData.get('author') || ''), token);
+
+    await api.updateArticle(
+      articleId,
+      {
+        title,
+        slug,
+        excerpt: String(formData.get('excerpt') || '').trim() || null,
+        content,
+        authorId,
+        featuredImageId,
+        seoTitle: String(formData.get('seoTitle') || '').trim() || null,
+        seoDescription: String(formData.get('seoDescription') || '').trim() || null,
+        seoFocusKeyword: String(formData.get('seoFocusKeyword') || '').trim() || null,
+        categoryIds,
+        primaryCategoryId,
+        tagIds,
+      },
+      token
+    );
+  } catch (err) {
+    if (err instanceof ApiError) return { error: err.message };
+    return { error: 'Something went wrong saving the article. Try again.' };
+  }
+
+  revalidatePath('/admin/articles');
+  revalidatePath(`/${currentSlug}`);
+  revalidatePath(`/${slug}`);
+  revalidatePath('/');
+  redirect('/admin/articles');
+}
+
 // featuredOrder = HERO_ORDER marks the single "big featured" hero article;
 // isFeatured=true with featuredOrder=null marks one of the (up to 3)
 // regular featured side cards. Mirrors how FeaturedSection/home.ts sort
