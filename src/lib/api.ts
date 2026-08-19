@@ -206,6 +206,8 @@ export const api = {
   updateArticle: (id: number, data: Partial<ArticleWriteInput>, token: string) =>
     request<{ article: ArticleDetail }>(`/api/articles/${id}`, { method: 'PUT', body: JSON.stringify(data), token }),
 
+  deleteArticle: (id: number, token: string) => request<void>(`/api/articles/${id}`, { method: 'DELETE', token }),
+
   listAdmins: (token: string) => request<{ admins: AdminAccount[] }>('/api/auth/admins', { token, cache: 'no-store' }),
 
   createAdmin: (data: { email: string; password: string; name: string; role: 'admin' | 'editor' }, token: string) =>

@@ -2,6 +2,7 @@ import Link from 'next/link';
 import { getSessionToken } from '@/lib/session';
 import { api } from '@/lib/api';
 import { FeaturedStarToggle } from './FeaturedStarToggle';
+import { DeleteArticleButton } from './DeleteArticleButton';
 
 export default async function AdminArticlesPage() {
   const token = (await getSessionToken())!;
@@ -19,6 +20,7 @@ export default async function AdminArticlesPage() {
             <th className="py-2 font-medium">Author</th>
             {isAdmin ? <th className="py-2 text-right font-medium">Featured</th> : null}
             {isAdmin ? <th className="py-2 text-right font-medium">Edit</th> : null}
+            {isAdmin ? <th className="py-2 text-right font-medium">Delete</th> : null}
           </tr>
         </thead>
         <tbody>
@@ -56,6 +58,11 @@ export default async function AdminArticlesPage() {
                   <Link href={`/admin/articles/${article.slug}/edit`} className="text-xs font-semibold text-red-600 hover:underline">
                     Edit
                   </Link>
+                </td>
+              ) : null}
+              {isAdmin ? (
+                <td className="py-2">
+                  <DeleteArticleButton articleId={article.id} articleSlug={article.slug} title={article.title} />
                 </td>
               ) : null}
             </tr>

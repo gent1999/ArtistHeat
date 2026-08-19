@@ -259,6 +259,23 @@ export async function setFeaturedLevelAction(articleId: number, level: FeaturedL
   return {};
 }
 
+export async function deleteArticleAction(articleId: number, articleSlug: string): Promise<{ error?: string }> {
+  const token = await getSessionToken();
+  if (!token) redirect('/admin/login');
+
+  try {
+    await api.deleteArticle(articleId, token);
+  } catch (err) {
+    if (err instanceof ApiError) return { error: err.message };
+    return { error: 'Something went wrong deleting the article.' };
+  }
+
+  revalidatePath('/admin/articles');
+  revalidatePath(`/${articleSlug}`);
+  revalidatePath('/');
+  return {};
+}
+
 export async function createUserAction(_prevState: { error?: string } | undefined, formData: FormData) {
   const token = await getSessionToken();
   if (!token) redirect('/admin/login');
