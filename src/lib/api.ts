@@ -105,6 +105,14 @@ export interface Media {
   altText: string | null;
 }
 
+export interface AdminAccount {
+  id: number;
+  email: string;
+  name: string;
+  role: 'admin' | 'editor';
+  createdAt: string;
+}
+
 export interface ArticleWriteInput {
   title: string;
   slug: string;
@@ -197,4 +205,18 @@ export const api = {
 
   updateArticle: (id: number, data: Partial<ArticleWriteInput>, token: string) =>
     request<{ article: ArticleDetail }>(`/api/articles/${id}`, { method: 'PUT', body: JSON.stringify(data), token }),
+
+  listAdmins: (token: string) => request<{ admins: AdminAccount[] }>('/api/auth/admins', { token, cache: 'no-store' }),
+
+  createAdmin: (data: { email: string; password: string; name: string; role: 'admin' | 'editor' }, token: string) =>
+    request<{ admin: AdminAccount }>('/api/auth/admins', { method: 'POST', body: JSON.stringify(data), token }),
+
+  updateAdmin: (
+    id: number,
+    data: Partial<{ email: string; name: string; role: 'admin' | 'editor'; password: string }>,
+    token: string
+  ) => request<{ admin: AdminAccount }>(`/api/auth/admins/${id}`, { method: 'PATCH', body: JSON.stringify(data), token }),
+
+  deleteAdmin: (id: number, token: string) =>
+    request<void>(`/api/auth/admins/${id}`, { method: 'DELETE', token }),
 };

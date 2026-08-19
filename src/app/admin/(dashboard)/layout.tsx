@@ -9,9 +9,11 @@ export default async function AdminDashboardLayout({ children }: { children: Rea
   if (!token) redirect('/admin/login');
 
   let adminName: string;
+  let isAdmin: boolean;
   try {
     const { admin } = await api.me(token);
     adminName = admin.name;
+    isAdmin = admin.role === 'admin';
   } catch (err) {
     if (err instanceof ApiError && err.status === 401) redirect('/admin/login');
     throw err;
@@ -43,6 +45,14 @@ export default async function AdminDashboardLayout({ children }: { children: Rea
             >
               Articles
             </Link>
+            {isAdmin ? (
+              <Link
+                href="/admin/users"
+                className="border-l-2 border-transparent px-3 py-1.5 hover:border-red-600 hover:bg-red-50 hover:text-red-600"
+              >
+                Users
+              </Link>
+            ) : null}
           </nav>
           <div className="mt-8 border-t border-neutral-200 px-3 pt-4 text-xs text-neutral-500">
             <p className="mb-2">{adminName}</p>

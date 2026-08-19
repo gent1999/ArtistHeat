@@ -258,3 +258,72 @@ export async function setFeaturedLevelAction(articleId: number, level: FeaturedL
   revalidatePath('/');
   return {};
 }
+
+export async function createUserAction(_prevState: { error?: string } | undefined, formData: FormData) {
+  const token = await getSessionToken();
+  if (!token) redirect('/admin/login');
+
+  const email = String(formData.get('email') || '').trim();
+  const password = String(formData.get('password') || '');
+  const name = String(formData.get('name') || '').trim();
+  const role = formData.get('role') === 'admin' ? 'admin' : 'editor';
+
+  if (!email || !password || !name) {
+    return { error: 'Email, password, and name are required.' };
+  }
+  if (password.length < 8) {
+    return { error: 'Password must be at least 8 characters.' };
+  }
+
+  try {
+    await api.createAdmin({ email, password, name, role }, token);
+  } catch (err) {
+    if (err instanceof ApiError) return { error: err.message };
+    return { error: 'Something went wrong creating the account. Try again.' };
+  }
+
+  revalidatePath('/admin/users');
+  redirect('/admin/users');
+}
+
+export async function updateUserAction(userId: number, _prevState: { error?: string } | undefined, formData: FormData) {
+  const token = await getSessionToken();
+  if (!token) redirect('/admin/login');
+
+  const email = String(formData.get('email') || '').trim();
+  const name = String(formData.get('name') || '').trim();
+  const role = formData.get('role') === 'admin' ? 'admin' : 'editor';
+  const password = String(formData.get('password') || '');
+
+  if (!email || !name) {
+    return { error: 'Email and name are required.' };
+  }
+  if (password && password.length < 8) {
+    return { error: 'New password must be at least 8 characters (or leave it blank to keep the current one).' };
+  }
+
+  try {
+    await api.updateAdmin(userId, { email, name, role, ...(password ? { password } : {}) }, token);
+  } catch (err) {
+    if (err instanceof ApiError) return { error: err.message };
+    return { error: 'Something went wrong saving the account. Try again.' };
+  }
+
+  revalidatePath('/admin/users');
+  redirect('/admin/users');
+}
+
+export async function deleteUserAction(userId: number): Promise<{ error?: string }> {
+  const token = await getSessionToken();
+  if (!token) redirect('/admin/login');
+
+  try {
+    await api.deleteAdmin(userId, token);
+  } catch (err) {
+    if (err instanceof ApiError) return { error: err.message };
+    return { error: 'Something went wrong deleting the account.' };
+  }
+
+  revalidatePath('/admin/users');
+  return {};
+}
