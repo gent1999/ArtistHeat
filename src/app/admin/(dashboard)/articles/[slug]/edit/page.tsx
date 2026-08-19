@@ -1,4 +1,4 @@
-import { notFound } from 'next/navigation';
+import { notFound, redirect } from 'next/navigation';
 import { getSessionToken } from '@/lib/session';
 import { ApiError, api } from '@/lib/api';
 import { EditArticleForm } from './EditArticleForm';
@@ -6,6 +6,11 @@ import { EditArticleForm } from './EditArticleForm';
 export default async function EditArticlePage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
   const token = (await getSessionToken())!;
+
+  // Editing existing articles is a full-admin-only page -- an "editor"
+  // account only gets Dashboard / New Article / Articles (view).
+  const { admin } = await api.me(token);
+  if (admin.role !== 'admin') redirect('/admin/articles');
 
   let article;
   try {

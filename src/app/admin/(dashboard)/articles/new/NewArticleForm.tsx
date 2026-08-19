@@ -27,10 +27,12 @@ export function NewArticleForm({
   authors,
   categories,
   existingTagNames,
+  canFeature,
 }: {
   authors: Author[];
   categories: Category[];
   existingTagNames: string[];
+  canFeature: boolean;
 }) {
   const [state, formAction] = useActionState(createArticleAction, undefined);
   const [title, setTitle] = useState('');
@@ -215,18 +217,20 @@ export function NewArticleForm({
         <p className="mt-1 text-xs text-neutral-500">Existing tags will be reused; anything new gets created.</p>
       </div>
 
-      <div className="flex items-center gap-6 border border-neutral-300 p-3">
-        <label className="flex items-center gap-2 text-sm font-medium">
-          <input type="checkbox" name="isFeatured" />
-          Feature on homepage
-        </label>
-        <div className="flex items-center gap-2">
-          <label htmlFor="featuredOrder" className="text-sm text-neutral-600">
-            Order
+      {canFeature ? (
+        <div className="flex items-center gap-6 border border-neutral-300 p-3">
+          <label className="flex items-center gap-2 text-sm font-medium">
+            <input type="checkbox" name="isFeatured" />
+            Feature on homepage
           </label>
-          <input id="featuredOrder" name="featuredOrder" type="number" min={1} className="w-20 border border-neutral-300 px-2 py-1 text-sm" />
+          <div className="flex items-center gap-2">
+            <label htmlFor="featuredOrder" className="text-sm text-neutral-600">
+              Order
+            </label>
+            <input id="featuredOrder" name="featuredOrder" type="number" min={1} className="w-20 border border-neutral-300 px-2 py-1 text-sm" />
+          </div>
         </div>
-      </div>
+      ) : null}
 
       <details className="border border-neutral-300 p-3">
         <summary className="cursor-pointer text-sm font-medium">SEO (optional)</summary>

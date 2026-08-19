@@ -43,6 +43,10 @@ export interface ArticleSummary {
   author: { id: number; name: string; slug: string } | null;
   featuredImage: { id: number; sourceUrl: string; altText: string | null } | null;
   articleCategories?: { isPrimary: boolean; category: { id: number; name: string; slug: string } }[];
+  // Admin-only: which admin account posted this. Only present when the
+  // request was authenticated -- the backend never sends it to anonymous
+  // (public) callers.
+  publishedByAdmin?: { id: number; email: string } | null;
 }
 
 export interface HomeSection {

@@ -5,7 +5,8 @@ import { FeaturedStarToggle } from './FeaturedStarToggle';
 
 export default async function AdminArticlesPage() {
   const token = (await getSessionToken())!;
-  const { articles } = await api.listArticles({ pageSize: 50 }, token);
+  const [{ articles }, { admin }] = await Promise.all([api.listArticles({ pageSize: 50 }, token), api.me(token)]);
+  const isAdmin = admin.role === 'admin';
 
   return (
     <div>
@@ -16,8 +17,8 @@ export default async function AdminArticlesPage() {
             <th className="py-2 font-medium">Title</th>
             <th className="py-2 font-medium">Status</th>
             <th className="py-2 font-medium">Author</th>
-            <th className="py-2 text-right font-medium">Featured</th>
-            <th className="py-2 text-right font-medium">Edit</th>
+            {isAdmin ? <th className="py-2 text-right font-medium">Featured</th> : null}
+            {isAdmin ? <th className="py-2 text-right font-medium">Edit</th> : null}
           </tr>
         </thead>
         <tbody>
@@ -39,15 +40,24 @@ export default async function AdminArticlesPage() {
                   {article.status}
                 </span>
               </td>
-              <td className="py-2 text-neutral-600">{article.author?.name ?? '—'}</td>
-              <td className="py-2">
-                <FeaturedStarToggle articleId={article.id} isFeatured={Boolean(article.isFeatured)} featuredOrder={article.featuredOrder} />
+              <td className="py-2 text-neutral-600">
+                {article.author?.name ?? '—'}
+                {article.publishedByAdmin ? (
+                  <div className="text-xs text-neutral-400">posted by {article.publishedByAdmin.email}</div>
+                ) : null}
               </td>
-              <td className="py-2 text-right">
-                <Link href={`/admin/articles/${article.slug}/edit`} className="text-xs font-semibold text-red-600 hover:underline">
-                  Edit
-                </Link>
-              </td>
+              {isAdmin ? (
+                <td className="py-2">
+                  <FeaturedStarToggle articleId={article.id} isFeatured={Boolean(article.isFeatured)} featuredOrder={article.featuredOrder} />
+                </td>
+              ) : null}
+              {isAdmin ? (
+                <td className="py-2 text-right">
+                  <Link href={`/admin/articles/${article.slug}/edit`} className="text-xs font-semibold text-red-600 hover:underline">
+                    Edit
+                  </Link>
+                </td>
+              ) : null}
             </tr>
           ))}
         </tbody>
