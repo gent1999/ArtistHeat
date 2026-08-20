@@ -5,6 +5,7 @@ import { useFormStatus } from 'react-dom';
 import { createArticleAction } from '../../../actions';
 import { slugify } from '@/lib/format';
 import { uploadImageToCloudinary } from '@/lib/upload';
+import { ContentEditor } from '../ContentEditor';
 import type { Author, Category } from '@/lib/api';
 
 function SubmitButton() {
@@ -105,12 +106,7 @@ export function NewArticleForm({
         <textarea id="excerpt" name="excerpt" rows={2} className={inputClass} />
       </div>
 
-      <div>
-        <label htmlFor="content" className={labelClass}>
-          Content (HTML)
-        </label>
-        <textarea id="content" name="content" required rows={16} className={`${inputClass} font-mono`} />
-      </div>
+      <ContentEditor initialValue="" initialFormat="markdown" />
 
       <div>
         <label htmlFor="author" className={labelClass}>

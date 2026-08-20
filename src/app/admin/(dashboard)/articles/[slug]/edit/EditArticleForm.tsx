@@ -4,6 +4,7 @@ import { useState, useActionState } from 'react';
 import { useFormStatus } from 'react-dom';
 import { updateArticleAction } from '../../../../actions';
 import { uploadImageToCloudinary } from '@/lib/upload';
+import { ContentEditor } from '../../ContentEditor';
 import type { Author, Category, ArticleDetail } from '@/lib/api';
 
 function SubmitButton() {
@@ -98,19 +99,7 @@ export function EditArticleForm({
         <textarea id="excerpt" name="excerpt" rows={2} className={inputClass} defaultValue={article.excerpt ?? ''} />
       </div>
 
-      <div>
-        <label htmlFor="content" className={labelClass}>
-          Content (HTML)
-        </label>
-        <textarea
-          id="content"
-          name="content"
-          required
-          rows={16}
-          className={`${inputClass} font-mono`}
-          defaultValue={article.content}
-        />
-      </div>
+      <ContentEditor initialValue={article.content} initialFormat="html" />
 
       <div>
         <label htmlFor="author" className={labelClass}>
