@@ -113,6 +113,21 @@ export interface AdminAccount {
   createdAt: string;
 }
 
+export interface AnalyticsOverview {
+  analytics: {
+    last7Days: { sessions: number; activeUsers: number; pageviews: number };
+    last30Days: { sessions: number; activeUsers: number; pageviews: number };
+    topPages: { path: string; pageviews: number }[];
+  } | null;
+  analyticsError: string | null;
+  searchConsole: {
+    last7Days: { clicks: number; impressions: number; ctr: number; position: number };
+    last28Days: { clicks: number; impressions: number; ctr: number; position: number };
+    topQueries: { query: string; clicks: number; impressions: number; ctr: number; position: number }[];
+  } | null;
+  searchConsoleError: string | null;
+}
+
 export interface ArticleWriteInput {
   title: string;
   slug: string;
@@ -221,4 +236,7 @@ export const api = {
 
   deleteAdmin: (id: number, token: string) =>
     request<void>(`/api/auth/admins/${id}`, { method: 'DELETE', token }),
+
+  getAnalyticsOverview: (token: string) =>
+    request<AnalyticsOverview>('/api/analytics/overview', { token, cache: 'no-store' }),
 };
