@@ -117,12 +117,16 @@ export interface AnalyticsOverview {
   analytics: {
     last7Days: { sessions: number; activeUsers: number; pageviews: number };
     last30Days: { sessions: number; activeUsers: number; pageviews: number };
+    thisMonth: { sessions: number; activeUsers: number; pageviews: number };
+    lastMonth: { sessions: number; activeUsers: number; pageviews: number };
     topPages: { path: string; pageviews: number }[];
   } | null;
   analyticsError: string | null;
   searchConsole: {
     last7Days: { clicks: number; impressions: number; ctr: number; position: number };
     last28Days: { clicks: number; impressions: number; ctr: number; position: number };
+    thisMonth: { clicks: number; impressions: number; ctr: number; position: number };
+    lastMonth: { clicks: number; impressions: number; ctr: number; position: number };
     topQueries: { query: string; clicks: number; impressions: number; ctr: number; position: number }[];
   } | null;
   searchConsoleError: string | null;
