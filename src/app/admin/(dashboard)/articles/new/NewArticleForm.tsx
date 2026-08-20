@@ -6,6 +6,7 @@ import { createArticleAction } from '../../../actions';
 import { slugify } from '@/lib/format';
 import { uploadImageToCloudinary } from '@/lib/upload';
 import { ContentEditor } from '../ContentEditor';
+import { GallerySlots } from '../GallerySlots';
 import type { Author, Category } from '@/lib/api';
 
 function SubmitButton() {
@@ -160,6 +161,8 @@ export function NewArticleForm({
           <img src={featuredImageUrl} alt="" className="mt-3 h-32 w-auto border border-neutral-300 object-cover" />
         ) : null}
       </div>
+
+      <GallerySlots initial={[]} />
 
       <fieldset>
         <legend className={labelClass}>Categories</legend>

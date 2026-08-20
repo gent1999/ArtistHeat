@@ -65,6 +65,30 @@ async function resolveAuthorId(rawName: string, token: string): Promise<number |
   return author.id;
 }
 
+// Resolves the 3 gallery-image slots (see GallerySlots.tsx) to media IDs --
+// same "only create a new Media row if the URL actually changed" logic as
+// the featured image, applied per slot so an edit-without-touching-photos
+// doesn't leave behind duplicate Media rows.
+async function resolveGalleryImageIds(formData: FormData, token: string): Promise<number[]> {
+  const ids: number[] = [];
+  for (let i = 0; i < 3; i++) {
+    const url = String(formData.get(`galleryImageUrl${i}`) || '').trim();
+    if (!url) continue;
+
+    const alt = String(formData.get(`galleryImageAlt${i}`) || '').trim() || null;
+    const originalUrl = String(formData.get(`originalGalleryUrl${i}`) || '').trim();
+    const originalIdRaw = String(formData.get(`originalGalleryMediaId${i}`) || '').trim();
+
+    if (originalIdRaw && url === originalUrl) {
+      ids.push(Number(originalIdRaw));
+    } else {
+      const { media } = await api.createMedia({ sourceUrl: url, altText: alt }, token);
+      ids.push(media.id);
+    }
+  }
+  return ids;
+}
+
 // Hands the client a short-lived, upload-only Cloudinary signature so the
 // browser can upload the file directly (never through our own server --
 // Vercel's serverless functions cap request bodies well under typical
@@ -104,6 +128,7 @@ export async function createArticleAction(_prevState: { error?: string } | undef
 
     const authorId = await resolveAuthorId(String(formData.get('author') || ''), token);
     const featuredOrderRaw = String(formData.get('featuredOrder') || '');
+    const galleryImageIds = await resolveGalleryImageIds(formData, token);
 
     await api.createArticle(
       {
@@ -122,6 +147,7 @@ export async function createArticleAction(_prevState: { error?: string } | undef
         categoryIds,
         primaryCategoryId,
         tagIds,
+        galleryImageIds,
       },
       token
     );
@@ -177,6 +203,7 @@ export async function updateArticleAction(
     const primaryCategoryId = primaryCategoryIdRaw ? Number(primaryCategoryIdRaw) : categoryIds[0] ?? null;
 
     const authorId = await resolveAuthorId(String(formData.get('author') || ''), token);
+    const galleryImageIds = await resolveGalleryImageIds(formData, token);
 
     await api.updateArticle(
       articleId,
@@ -191,6 +218,7 @@ export async function updateArticleAction(
         seoDescription: String(formData.get('seoDescription') || '').trim() || null,
         seoFocusKeyword: String(formData.get('seoFocusKeyword') || '').trim() || null,
         categoryIds,
+        galleryImageIds,
         primaryCategoryId,
         tagIds,
       },

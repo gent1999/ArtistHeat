@@ -67,6 +67,7 @@ export interface ArticleDetail extends ArticleSummary {
   canonicalUrl: string | null;
   ogImageUrl: string | null;
   articleTags: { tag: { id: number; name: string; slug: string } }[];
+  galleryImages: { media: { id: number; sourceUrl: string; altText: string | null } }[];
 }
 
 export interface Pagination {
@@ -160,6 +161,7 @@ export interface ArticleWriteInput {
   categoryIds: number[];
   primaryCategoryId?: number | null;
   tagIds: number[];
+  galleryImageIds?: number[];
 }
 
 export const api = {

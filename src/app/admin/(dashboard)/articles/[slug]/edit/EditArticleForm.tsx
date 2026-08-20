@@ -5,6 +5,7 @@ import { useFormStatus } from 'react-dom';
 import { updateArticleAction } from '../../../../actions';
 import { uploadImageToCloudinary } from '@/lib/upload';
 import { ContentEditor } from '../../ContentEditor';
+import { GallerySlots } from '../../GallerySlots';
 import type { Author, Category, ArticleDetail } from '@/lib/api';
 
 function SubmitButton() {
@@ -165,6 +166,14 @@ export function EditArticleForm({
           <img src={featuredImageUrl} alt="" className="mt-3 h-32 w-auto border border-neutral-300 object-cover" />
         ) : null}
       </div>
+
+      <GallerySlots
+        initial={(article.galleryImages ?? []).map((g) => ({
+          mediaId: g.media.id,
+          url: g.media.sourceUrl,
+          alt: g.media.altText ?? '',
+        }))}
+      />
 
       <fieldset>
         <legend className={labelClass}>Categories</legend>

@@ -99,6 +99,20 @@ export default async function ArticlePage({ params }: Props) {
             dangerouslySetInnerHTML={{ __html: article.content }}
           />
 
+          {article.galleryImages.length > 0 ? (
+            <div className="mt-10 grid grid-cols-1 gap-3 sm:grid-cols-3">
+              {article.galleryImages.map(({ media }) => (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img
+                  key={media.id}
+                  src={media.sourceUrl}
+                  alt={media.altText || article.title}
+                  className="aspect-square w-full object-cover"
+                />
+              ))}
+            </div>
+          ) : null}
+
           {article.articleTags.length ? (
             <div className="mt-10 flex flex-wrap gap-2 border-t border-neutral-200 pt-6">
               {article.articleTags.map(({ tag }) => (
