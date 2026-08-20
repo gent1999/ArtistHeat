@@ -31,9 +31,9 @@ export default async function AdminDashboardLayout({ children }: { children: Rea
   const { pagination } = await api.listArticles({ pageSize: 1 }, token);
 
   return (
-    <div className="flex min-h-screen">
-      <aside className="flex w-60 shrink-0 flex-col border-r border-neutral-200 bg-white">
-        <Link href="/admin" className="flex items-center gap-2 border-b border-neutral-200 px-4 py-4">
+    <div className="flex h-screen overflow-hidden">
+      <aside className="flex h-screen w-60 shrink-0 flex-col border-r border-neutral-200 bg-white">
+        <Link href="/admin" className="flex shrink-0 items-center gap-2 border-b border-neutral-200 px-4 py-4">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img src="/logo.png" alt="ArtistHeat" className="h-8 w-auto" />
           <span className="text-[10px] font-bold tracking-widest text-neutral-400 uppercase">Command Center</span>
@@ -59,7 +59,7 @@ export default async function AdminDashboardLayout({ children }: { children: Rea
           ) : null}
         </nav>
 
-        <div className="border-t border-neutral-200 px-3 py-4 text-xs">
+        <div className="shrink-0 border-t border-neutral-200 px-3 py-4 text-xs">
           <p className="font-semibold text-neutral-800">{adminName}</p>
           <p className="mb-3 text-neutral-500">{adminEmail}</p>
           <div className="flex flex-col gap-1.5">
@@ -75,14 +75,14 @@ export default async function AdminDashboardLayout({ children }: { children: Rea
         </div>
       </aside>
 
-      <div className="flex flex-1 flex-col">
-        <header className="flex items-center justify-between border-b border-neutral-200 bg-white px-6 py-2 text-xs font-medium text-neutral-500">
+      <div className="flex flex-1 flex-col overflow-hidden">
+        <header className="flex shrink-0 items-center justify-between border-b border-neutral-200 bg-white px-6 py-2 text-xs font-medium text-neutral-500">
           <span className="inline-flex items-center gap-1.5">
             <span className="h-1.5 w-1.5 bg-red-600" />
             {pagination.total} articles
           </span>
         </header>
-        <main className="flex-1 bg-neutral-50 p-6">{children}</main>
+        <main className="flex-1 overflow-y-auto bg-neutral-50 p-6">{children}</main>
       </div>
     </div>
   );
