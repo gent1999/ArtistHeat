@@ -188,6 +188,40 @@ export default async function AdminHomePage() {
         </div>
       ) : null}
 
+      {isAdmin && overview ? (
+        <section className="border border-neutral-200 bg-white p-4">
+          <SectionHeading
+            right={
+              overview.seoStats ? (
+                <span className="text-xs font-medium text-neutral-400">
+                  {overview.seoStats.stale ? 'Stale -- ' : ''}
+                  Updated {new Date(overview.seoStats.fetchedAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                </span>
+              ) : null
+            }
+          >
+            Domain Authority -- Moz
+          </SectionHeading>
+          {overview.seoStats ? (
+            <div className="grid grid-cols-2 gap-3 sm:grid-cols-5">
+              <StatCard label="Domain Authority" value={overview.seoStats.domainAuthority ?? '--'} />
+              <StatCard label="Page Authority" value={overview.seoStats.pageAuthority ?? '--'} />
+              <StatCard label="Spam Score" value={overview.seoStats.spamScore ?? '--'} />
+              <StatCard
+                label="Linking Domains"
+                value={overview.seoStats.linkingRootDomains !== null ? formatNumber(overview.seoStats.linkingRootDomains) : '--'}
+              />
+              <StatCard
+                label="Backlinks"
+                value={overview.seoStats.externalBacklinks !== null ? formatNumber(overview.seoStats.externalBacklinks) : '--'}
+              />
+            </div>
+          ) : (
+            <p className="text-sm text-red-600">{overview.seoStatsError || 'Domain authority data is unavailable.'}</p>
+          )}
+        </section>
+      ) : null}
+
       <section className="border border-neutral-200 bg-white p-4">
         <SectionHeading right={<Link href="/admin/articles" className="text-xs font-bold text-red-600 hover:underline">View All</Link>}>
           Recent Articles

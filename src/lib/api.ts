@@ -132,6 +132,16 @@ export interface AnalyticsOverview {
     topPages: { page: string; clicks: number; impressions: number; ctr: number; position: number }[];
   } | null;
   searchConsoleError: string | null;
+  seoStats: {
+    domainAuthority: number | null;
+    pageAuthority: number | null;
+    spamScore: number | null;
+    linkingRootDomains: number | null;
+    externalBacklinks: number | null;
+    fetchedAt: string;
+    stale: boolean;
+  } | null;
+  seoStatsError: string | null;
 }
 
 export interface ArticleWriteInput {
