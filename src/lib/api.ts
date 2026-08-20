@@ -66,6 +66,7 @@ export interface ArticleDetail extends ArticleSummary {
   seoFocusKeyword: string | null;
   canonicalUrl: string | null;
   ogImageUrl: string | null;
+  spotifyUrl: string | null;
   articleTags: { tag: { id: number; name: string; slug: string } }[];
   galleryImages: { media: { id: number; sourceUrl: string; altText: string | null } }[];
 }
@@ -156,6 +157,7 @@ export interface ArticleWriteInput {
   seoTitle?: string | null;
   seoDescription?: string | null;
   seoFocusKeyword?: string | null;
+  spotifyUrl?: string | null;
   isFeatured?: boolean;
   featuredOrder?: number | null;
   categoryIds: number[];

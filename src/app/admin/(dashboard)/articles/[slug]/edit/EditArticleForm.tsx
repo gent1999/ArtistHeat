@@ -175,6 +175,23 @@ export function EditArticleForm({
         }))}
       />
 
+      <div>
+        <label htmlFor="spotifyUrl" className={labelClass}>
+          Spotify Link (optional)
+        </label>
+        <input
+          id="spotifyUrl"
+          name="spotifyUrl"
+          type="url"
+          placeholder="https://open.spotify.com/track/..."
+          className={inputClass}
+          defaultValue={article.spotifyUrl ?? ''}
+        />
+        <p className="mt-1 text-xs text-neutral-500">
+          Track, album, or playlist link -- shows as an embedded player on the article page.
+        </p>
+      </div>
+
       <fieldset>
         <legend className={labelClass}>Categories</legend>
         <div className="grid grid-cols-2 gap-x-4 gap-y-2 border border-neutral-300 p-3">

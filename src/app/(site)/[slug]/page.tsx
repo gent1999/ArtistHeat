@@ -2,7 +2,7 @@ import { notFound } from 'next/navigation';
 import Link from 'next/link';
 import type { Metadata } from 'next';
 import { api, ApiError } from '@/lib/api';
-import { formatDate, primaryCategoryOf, estimateReadingTimeMinutes } from '@/lib/format';
+import { formatDate, primaryCategoryOf, estimateReadingTimeMinutes, parseSpotifyEmbedUrl } from '@/lib/format';
 import { ShareBar } from '@/components/ShareBar';
 import { AuthorCard } from '@/components/AuthorCard';
 import { ArticleLatestPosts } from '@/components/ArticleLatestPosts';
@@ -49,6 +49,7 @@ export default async function ArticlePage({ params }: Props) {
 
   const primaryCategory = primaryCategoryOf(article);
   const readingTime = estimateReadingTimeMinutes(article.content);
+  const spotifyEmbedUrl = parseSpotifyEmbedUrl(article.spotifyUrl);
 
   return (
     <div className="mx-auto max-w-[1100px] px-4 py-8">
@@ -98,6 +99,20 @@ export default async function ArticlePage({ params }: Props) {
             className="prose prose-neutral mt-8 max-w-none prose-headings:font-bold prose-a:text-red-600"
             dangerouslySetInnerHTML={{ __html: article.content }}
           />
+
+          {spotifyEmbedUrl ? (
+            <div className="mt-10">
+              <iframe
+                src={spotifyEmbedUrl}
+                width="100%"
+                height="380"
+                style={{ border: 0 }}
+                allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
+                loading="lazy"
+                title="Spotify player"
+              />
+            </div>
+          ) : null}
 
           {article.galleryImages.length > 0 ? (
             <div className="mt-10 grid grid-cols-1 gap-3 sm:grid-cols-3">
