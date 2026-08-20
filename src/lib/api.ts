@@ -120,6 +120,7 @@ export interface AnalyticsOverview {
     thisMonth: { sessions: number; activeUsers: number; pageviews: number };
     lastMonth: { sessions: number; activeUsers: number; pageviews: number };
     topPages: { path: string; pageviews: number }[];
+    monthlyTrend: { month: string; label: string; sessions: number }[];
   } | null;
   analyticsError: string | null;
   searchConsole: {
@@ -128,6 +129,7 @@ export interface AnalyticsOverview {
     thisMonth: { clicks: number; impressions: number; ctr: number; position: number };
     lastMonth: { clicks: number; impressions: number; ctr: number; position: number };
     topQueries: { query: string; clicks: number; impressions: number; ctr: number; position: number }[];
+    topPages: { page: string; clicks: number; impressions: number; ctr: number; position: number }[];
   } | null;
   searchConsoleError: string | null;
 }
@@ -154,7 +156,14 @@ export const api = {
   getHome: () => request<HomeData>('/api/home', { cache: 'no-store' }),
 
   listArticles: (
-    params: { page?: number; pageSize?: number; category?: string; tag?: string; isFeatured?: boolean } = {},
+    params: {
+      page?: number;
+      pageSize?: number;
+      category?: string;
+      tag?: string;
+      isFeatured?: boolean;
+      status?: 'draft' | 'published' | 'all';
+    } = {},
     token?: string
   ) => {
     const qs = new URLSearchParams();
@@ -163,6 +172,7 @@ export const api = {
     if (params.category) qs.set('category', params.category);
     if (params.tag) qs.set('tag', params.tag);
     if (params.isFeatured !== undefined) qs.set('isFeatured', String(params.isFeatured));
+    if (params.status) qs.set('status', params.status);
     return request<{ articles: ArticleSummary[]; pagination: Pagination }>(`/api/articles?${qs}`, { token, cache: 'no-store' });
   },
 
