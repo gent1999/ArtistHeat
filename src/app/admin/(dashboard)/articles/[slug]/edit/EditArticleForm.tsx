@@ -175,22 +175,51 @@ export function EditArticleForm({
         }))}
       />
 
-      <div>
-        <label htmlFor="spotifyUrl" className={labelClass}>
-          Spotify Link (optional)
-        </label>
-        <input
-          id="spotifyUrl"
-          name="spotifyUrl"
-          type="url"
-          placeholder="https://open.spotify.com/track/..."
-          className={inputClass}
-          defaultValue={article.spotifyUrl ?? ''}
-        />
-        <p className="mt-1 text-xs text-neutral-500">
-          Track, album, or playlist link -- shows as an embedded player on the article page.
+      <fieldset className="flex flex-col gap-4 border border-neutral-300 p-3">
+        <legend className="px-1 text-sm font-medium">Embeds (optional)</legend>
+        <div>
+          <label htmlFor="spotifyUrl" className="mb-1 block text-xs text-neutral-600">
+            Spotify Link
+          </label>
+          <input
+            id="spotifyUrl"
+            name="spotifyUrl"
+            type="url"
+            placeholder="https://open.spotify.com/track/..."
+            className={inputClass}
+            defaultValue={article.spotifyUrl ?? ''}
+          />
+        </div>
+        <div>
+          <label htmlFor="soundcloudUrl" className="mb-1 block text-xs text-neutral-600">
+            SoundCloud Link
+          </label>
+          <input
+            id="soundcloudUrl"
+            name="soundcloudUrl"
+            type="url"
+            placeholder="https://soundcloud.com/artist/track"
+            className={inputClass}
+            defaultValue={article.soundcloudUrl ?? ''}
+          />
+        </div>
+        <div>
+          <label htmlFor="youtubeUrl" className="mb-1 block text-xs text-neutral-600">
+            YouTube Link
+          </label>
+          <input
+            id="youtubeUrl"
+            name="youtubeUrl"
+            type="url"
+            placeholder="https://www.youtube.com/watch?v=..."
+            className={inputClass}
+            defaultValue={article.youtubeUrl ?? ''}
+          />
+        </div>
+        <p className="text-xs text-neutral-500">
+          Track/video, album/playlist links -- each shows as an embedded player on the article page.
         </p>
-      </div>
+      </fieldset>
 
       <fieldset>
         <legend className={labelClass}>Categories</legend>

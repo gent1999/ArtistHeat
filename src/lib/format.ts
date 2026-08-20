@@ -34,6 +34,63 @@ export function parseSpotifyEmbedUrl(url: string | null | undefined): string | n
   }
 }
 
+// SoundCloud's widget takes the original canonical URL as-is (no ID
+// extraction needed) and auto-detects track vs. playlist/set, rendering
+// the full tracklist for the latter on its own.
+export function buildSoundcloudEmbedUrl(url: string | null | undefined): string | null {
+  if (!url) return null;
+  try {
+    const parsed = new URL(url);
+    if (!/(^|\.)soundcloud\.com$/.test(parsed.hostname)) return null;
+    const params = new URLSearchParams({
+      url,
+      color: '#dd0000',
+      auto_play: 'false',
+      show_artwork: 'true',
+    });
+    return `https://w.soundcloud.com/player/?${params.toString()}`;
+  } catch {
+    return null;
+  }
+}
+
+// Handles youtube.com/watch, youtu.be short links, youtube.com/embed
+// (already-embed URLs), and youtube.com/playlist (playlist with no
+// specific video). A video-in-playlist URL embeds that video with the
+// playlist attached; a playlist-only URL embeds the full playlist via
+// the videoseries embed, which lists every video in it automatically.
+export function parseYoutubeEmbedUrl(url: string | null | undefined): string | null {
+  if (!url) return null;
+  try {
+    const parsed = new URL(url);
+    const host = parsed.hostname.replace(/^www\.|^m\./, '');
+    let videoId: string | null = null;
+    const playlistId = parsed.searchParams.get('list');
+
+    if (host === 'youtu.be') {
+      videoId = parsed.pathname.slice(1).split('/')[0] || null;
+    } else if (host === 'youtube.com') {
+      if (parsed.pathname === '/watch') {
+        videoId = parsed.searchParams.get('v');
+      } else if (parsed.pathname.startsWith('/embed/')) {
+        videoId = parsed.pathname.split('/')[2] || null;
+      }
+    } else {
+      return null;
+    }
+
+    if (videoId) {
+      return playlistId ? `https://www.youtube.com/embed/${videoId}?list=${playlistId}` : `https://www.youtube.com/embed/${videoId}`;
+    }
+    if (playlistId) {
+      return `https://www.youtube.com/embed/videoseries?list=${playlistId}`;
+    }
+    return null;
+  } catch {
+    return null;
+  }
+}
+
 export function slugify(text: string): string {
   return text
     .toLowerCase()

@@ -2,7 +2,14 @@ import { notFound } from 'next/navigation';
 import Link from 'next/link';
 import type { Metadata } from 'next';
 import { api, ApiError } from '@/lib/api';
-import { formatDate, primaryCategoryOf, estimateReadingTimeMinutes, parseSpotifyEmbedUrl } from '@/lib/format';
+import {
+  formatDate,
+  primaryCategoryOf,
+  estimateReadingTimeMinutes,
+  parseSpotifyEmbedUrl,
+  buildSoundcloudEmbedUrl,
+  parseYoutubeEmbedUrl,
+} from '@/lib/format';
 import { ShareBar } from '@/components/ShareBar';
 import { AuthorCard } from '@/components/AuthorCard';
 import { ArticleLatestPosts } from '@/components/ArticleLatestPosts';
@@ -50,6 +57,8 @@ export default async function ArticlePage({ params }: Props) {
   const primaryCategory = primaryCategoryOf(article);
   const readingTime = estimateReadingTimeMinutes(article.content);
   const spotifyEmbedUrl = parseSpotifyEmbedUrl(article.spotifyUrl);
+  const soundcloudEmbedUrl = buildSoundcloudEmbedUrl(article.soundcloudUrl);
+  const youtubeEmbedUrl = parseYoutubeEmbedUrl(article.youtubeUrl);
 
   return (
     <div className="mx-auto max-w-[1100px] px-4 py-8">
@@ -110,6 +119,34 @@ export default async function ArticlePage({ params }: Props) {
                 allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
                 loading="lazy"
                 title="Spotify player"
+              />
+            </div>
+          ) : null}
+
+          {soundcloudEmbedUrl ? (
+            <div className="mt-10">
+              <iframe
+                src={soundcloudEmbedUrl}
+                width="100%"
+                height="300"
+                style={{ border: 0 }}
+                allow="autoplay"
+                loading="lazy"
+                title="SoundCloud player"
+              />
+            </div>
+          ) : null}
+
+          {youtubeEmbedUrl ? (
+            <div className="mt-10 aspect-video w-full">
+              <iframe
+                src={youtubeEmbedUrl}
+                width="100%"
+                height="100%"
+                style={{ border: 0 }}
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                loading="lazy"
+                title="YouTube video"
               />
             </div>
           ) : null}
