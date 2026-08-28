@@ -21,10 +21,10 @@ export default function ContactPage() {
 
       <p className="mb-2 text-lg text-neutral-700">Hey there, upcoming talents and artists! Send your work to:</p>
       <a
-        href="mailto:info@artistheat.com"
+        href="mailto:network.sapient@gmail.com"
         className="inline-block bg-neutral-100 px-4 py-2 text-lg font-bold text-neutral-900 transition-colors hover:bg-red-600 hover:text-white"
       >
-        info@artistheat.com
+        network.sapient@gmail.com
       </a>
       <p className="mt-4 text-lg text-neutral-700">and get featured on our platform. Get discovered right here.</p>
 
@@ -43,8 +43,8 @@ export default function ContactPage() {
 
       <p className="mt-6 text-neutral-700">
         Let&rsquo;s grow this brand together.{' '}
-        <a href="mailto:info@artistheat.com" className="font-bold text-red-600 hover:underline">
-          info@artistheat.com
+        <a href="mailto:network.sapient@gmail.com" className="font-bold text-red-600 hover:underline">
+          network.sapient@gmail.com
         </a>
       </p>
 
