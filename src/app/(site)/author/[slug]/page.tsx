@@ -2,6 +2,7 @@ import { notFound } from 'next/navigation';
 import type { Metadata } from 'next';
 import { ApiError, api } from '@/lib/api';
 import { ArticleCard } from '@/components/ArticleCard';
+import { canonicalWithPage } from '@/lib/site';
 
 type Props = {
   params: Promise<{ slug: string }>;
@@ -17,10 +18,11 @@ async function loadAuthor(slug: string, page: number) {
   }
 }
 
-export async function generateMetadata({ params }: Props): Promise<Metadata> {
+export async function generateMetadata({ params, searchParams }: Props): Promise<Metadata> {
   const { slug } = await params;
+  const { page } = await searchParams;
   const { author } = await loadAuthor(slug, 1);
-  return { title: author.name };
+  return { title: author.name, alternates: { canonical: canonicalWithPage(`/author/${slug}`, Number(page) || 1) } };
 }
 
 export default async function AuthorPage({ params, searchParams }: Props) {

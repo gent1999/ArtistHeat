@@ -10,6 +10,7 @@ import {
   buildSoundcloudEmbedUrl,
   parseYoutubeEmbedUrl,
 } from '@/lib/format';
+import { SITE_URL } from '@/lib/site';
 import { ShareBar } from '@/components/ShareBar';
 import { AuthorCard } from '@/components/AuthorCard';
 import { ArticleLatestPosts } from '@/components/ArticleLatestPosts';
@@ -39,7 +40,11 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   return {
     title,
     description,
-    alternates: article.canonicalUrl ? { canonical: article.canonicalUrl } : undefined,
+    // Respect an explicit canonical (e.g. syndicated content) when set;
+    // otherwise self-canonical to this article's own URL. Never leave
+    // canonical unset -- an unset canonical is exactly what let Google
+    // treat this page as having no stated identity.
+    alternates: { canonical: article.canonicalUrl || `${SITE_URL}/${article.slug}` },
     openGraph: {
       title,
       description,

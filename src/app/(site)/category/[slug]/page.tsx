@@ -2,6 +2,7 @@ import { notFound } from 'next/navigation';
 import type { Metadata } from 'next';
 import { ApiError, api } from '@/lib/api';
 import { ArticleCard } from '@/components/ArticleCard';
+import { canonicalWithPage } from '@/lib/site';
 
 type Props = {
   params: Promise<{ slug: string }>;
@@ -17,10 +18,16 @@ async function loadCategory(slug: string, page: number) {
   }
 }
 
-export async function generateMetadata({ params }: Props): Promise<Metadata> {
+export async function generateMetadata({ params, searchParams }: Props): Promise<Metadata> {
   const { slug } = await params;
+  const { page } = await searchParams;
+  const pageNum = Number(page) || 1;
   const { category } = await loadCategory(slug, 1);
-  return { title: category.name, description: category.description || undefined };
+  return {
+    title: category.name,
+    description: category.description || undefined,
+    alternates: { canonical: canonicalWithPage(`/category/${slug}`, pageNum) },
+  };
 }
 
 export default async function CategoryPage({ params, searchParams }: Props) {

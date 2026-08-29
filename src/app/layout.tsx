@@ -13,11 +13,18 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
+  metadataBase: new URL("https://artistheat.com"),
   title: {
     default: "ArtistHeat",
     template: "%s | ArtistHeat",
   },
   description: "Music, art, and culture.",
+  // Only emitted once a real code exists -- if artistheat.com is already
+  // verified via DNS TXT record in Search Console, this isn't needed at
+  // all; leave the env var unset in that case.
+  ...(process.env.NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION
+    ? { verification: { google: process.env.NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION } }
+    : {}),
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {

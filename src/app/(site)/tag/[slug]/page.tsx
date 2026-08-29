@@ -2,6 +2,7 @@ import { notFound } from 'next/navigation';
 import type { Metadata } from 'next';
 import { ApiError, api } from '@/lib/api';
 import { ArticleCard } from '@/components/ArticleCard';
+import { canonicalWithPage } from '@/lib/site';
 
 type Props = {
   params: Promise<{ slug: string }>;
@@ -17,10 +18,11 @@ async function loadTag(slug: string, page: number) {
   }
 }
 
-export async function generateMetadata({ params }: Props): Promise<Metadata> {
+export async function generateMetadata({ params, searchParams }: Props): Promise<Metadata> {
   const { slug } = await params;
+  const { page } = await searchParams;
   const { tag } = await loadTag(slug, 1);
-  return { title: `#${tag.name}` };
+  return { title: `#${tag.name}`, alternates: { canonical: canonicalWithPage(`/tag/${slug}`, Number(page) || 1) } };
 }
 
 export default async function TagPage({ params, searchParams }: Props) {

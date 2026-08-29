@@ -1,7 +1,13 @@
+import type { Metadata } from 'next';
 import { api } from '@/lib/api';
 import { FeaturedSection } from '@/components/FeaturedSection';
 import { CategorySection } from '@/components/CategorySection';
 import { Sidebar } from '@/components/Sidebar';
+import { SITE_URL } from '@/lib/site';
+
+export const metadata: Metadata = {
+  alternates: { canonical: SITE_URL },
+};
 
 export default async function HomePage() {
   const { featured, sections } = await api.getHome();
