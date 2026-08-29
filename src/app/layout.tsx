@@ -22,8 +22,8 @@ export const metadata: Metadata = {
   // Only emitted once a real code exists -- if artistheat.com is already
   // verified via DNS TXT record in Search Console, this isn't needed at
   // all; leave the env var unset in that case.
-  ...(process.env.NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION
-    ? { verification: { google: process.env.NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION } }
+  ...(process.env.GOOGLE_SITE_VERIFICATION
+    ? { verification: { google: process.env.GOOGLE_SITE_VERIFICATION } }
     : {}),
 };
 

@@ -8,7 +8,11 @@ import { BackToTop } from "@/components/BackToTop";
 // /admin doesn't inherit the trending bar/header/footer (or, below, GA
 // tracking -- admin activity isn't public traffic).
 export default function SiteLayout({ children }: { children: React.ReactNode }) {
-  const gaMeasurementId = process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID;
+  // Read server-side only and passed down as a prop -- never accessed via
+  // process.env in client code, so this doesn't need (and shouldn't use)
+  // Next.js's NEXT_PUBLIC_ client-bundle-inlining mechanism, even though
+  // the ID itself ends up visible in the rendered script tag either way.
+  const gaMeasurementId = process.env.GA_MEASUREMENT_ID;
 
   return (
     <div className="flex min-h-full flex-col">
