@@ -40,6 +40,9 @@ export interface ArticleSummary {
   updatedAt?: string | null;
   isFeatured?: boolean;
   featuredOrder?: number | null;
+  editorialType?: string | null;
+  isTrending?: boolean;
+  isEditorsPick?: boolean;
   author: { id: number; name: string; slug: string } | null;
   featuredImage: { id: number; sourceUrl: string; altText: string | null } | null;
   articleCategories?: { isPrimary: boolean; category: { id: number; name: string; slug: string } }[];
@@ -49,14 +52,15 @@ export interface ArticleSummary {
   publishedByAdmin?: { id: number; email: string } | null;
 }
 
-export interface HomeSection {
-  category: { id: number; name: string; slug: string };
-  articles: ArticleSummary[];
-}
-
 export interface HomeData {
   featured: ArticleSummary[];
-  sections: HomeSection[];
+  freshHeat: ArticleSummary[];
+  faceOfTheHeat: ArticleSummary[];
+  firstListen: ArticleSummary[];
+  heatCheckStories: ArticleSummary[];
+  nextUp: ArticleSummary[];
+  styleReport: ArticleSummary[];
+  mostHeated: ArticleSummary[];
 }
 
 export interface ArticleDetail extends ArticleSummary {
@@ -168,6 +172,9 @@ export interface ArticleWriteInput {
   youtubeUrl?: string | null;
   isFeatured?: boolean;
   featuredOrder?: number | null;
+  editorialType?: string | null;
+  isTrending?: boolean;
+  isEditorsPick?: boolean;
   categoryIds: number[];
   primaryCategoryId?: number | null;
   tagIds: number[];
@@ -183,7 +190,10 @@ export const api = {
       pageSize?: number;
       category?: string;
       tag?: string;
+      editorialType?: string;
       isFeatured?: boolean;
+      isTrending?: boolean;
+      isEditorsPick?: boolean;
       status?: 'draft' | 'published' | 'all';
     } = {},
     token?: string
@@ -193,7 +203,10 @@ export const api = {
     if (params.pageSize) qs.set('pageSize', String(params.pageSize));
     if (params.category) qs.set('category', params.category);
     if (params.tag) qs.set('tag', params.tag);
+    if (params.editorialType) qs.set('editorialType', params.editorialType);
     if (params.isFeatured !== undefined) qs.set('isFeatured', String(params.isFeatured));
+    if (params.isTrending !== undefined) qs.set('isTrending', String(params.isTrending));
+    if (params.isEditorsPick !== undefined) qs.set('isEditorsPick', String(params.isEditorsPick));
     if (params.status) qs.set('status', params.status);
     return request<{ articles: ArticleSummary[]; pagination: Pagination }>(`/api/articles?${qs}`, { token, cache: 'no-store' });
   },

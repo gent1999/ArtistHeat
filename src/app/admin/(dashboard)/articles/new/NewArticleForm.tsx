@@ -7,6 +7,7 @@ import { slugify } from '@/lib/format';
 import { uploadImageToCloudinary } from '@/lib/upload';
 import { ContentEditor } from '../ContentEditor';
 import { GallerySlots } from '../GallerySlots';
+import { EDITORIAL_TYPES, EDITORIAL_TYPE_LABELS } from '@/lib/editorial-types';
 import type { Author, Category } from '@/lib/api';
 
 function SubmitButton() {
@@ -257,6 +258,34 @@ export function NewArticleForm({
           ))}
         </datalist>
         <p className="mt-1 text-xs text-neutral-500">Existing tags will be reused; anything new gets created.</p>
+      </div>
+
+      <div>
+        <label htmlFor="editorialType" className={labelClass}>
+          Editorial Type (optional)
+        </label>
+        <select id="editorialType" name="editorialType" defaultValue="" className={inputClass}>
+          <option value="">No editorial type</option>
+          {EDITORIAL_TYPES.map((type) => (
+            <option key={type} value={type}>
+              {EDITORIAL_TYPE_LABELS[type]}
+            </option>
+          ))}
+        </select>
+        <p className="mt-1 text-xs text-neutral-500">
+          Controls which homepage rails (Fresh Heat, Face of the Heat, etc.) this article can appear in.
+        </p>
+      </div>
+
+      <div className="flex items-center gap-6 border border-neutral-300 p-3">
+        <label className="flex items-center gap-2 text-sm font-medium">
+          <input type="checkbox" name="isTrending" />
+          Trending
+        </label>
+        <label className="flex items-center gap-2 text-sm font-medium">
+          <input type="checkbox" name="isEditorsPick" />
+          Editor&rsquo;s Pick
+        </label>
       </div>
 
       {canFeature ? (

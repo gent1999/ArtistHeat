@@ -1,27 +1,20 @@
 import Link from 'next/link';
-import { api } from '@/lib/api';
 
-// Mirrors the old site's curated header menu order (a hand-picked subset
-// of categories, not "all of them" -- e.g. Uncategorized never appeared
-// in nav). Falls back gracefully if a slug doesn't exist in this dataset.
-const NAV_ORDER = [
-  'art-and-design',
-  'creators-and-influencers',
-  'writing-blogging',
-  'music',
-  'life',
-  'fashion',
-  'beauty',
-  'acting',
-  'comedy',
-  'money',
+// Reflects ArtistHeat's music/fashion-first direction rather than the old
+// site's flat list of every category. Legacy categories (Life, Money,
+// Comedy, etc.) aren't gone -- they're just no longer in primary nav; they
+// stay reachable via the footer's category list, search, and their own
+// URLs. MUSIC/FASHION still point at the existing category system;
+// INTERVIEWS/ARTISTS are the new editorialType-driven archive pages.
+const NAV_LINKS = [
+  { label: 'Music', href: '/category/music' },
+  { label: 'Interviews', href: '/interviews' },
+  { label: 'Artists', href: '/artists' },
+  { label: 'Fashion', href: '/category/fashion' },
+  { label: 'Heat Check', href: '/heat-check' },
 ];
 
-export async function SiteHeader() {
-  const { categories } = await api.listCategories();
-  const bySlug = new Map(categories.map((c) => [c.slug, c]));
-  const navCategories = NAV_ORDER.map((slug) => bySlug.get(slug)).filter((c): c is NonNullable<typeof c> => Boolean(c));
-
+export function SiteHeader() {
   return (
     <header className="border-b border-neutral-200">
       <div className="mx-auto flex max-w-[1400px] items-center justify-between gap-6 px-4 py-3">
@@ -29,12 +22,15 @@ export async function SiteHeader() {
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img src="/logo.png" alt="ArtistHeat" className="h-10 w-auto" />
         </Link>
-        <nav className="hidden flex-wrap gap-x-5 gap-y-2 text-xs font-bold uppercase tracking-wide md:flex">
-          {navCategories.map((c) => (
-            <Link key={c.id} href={`/category/${c.slug}`} className="hover:text-red-600">
-              {c.name}
+        <nav className="hidden flex-wrap items-center gap-x-5 gap-y-2 text-xs font-bold uppercase tracking-wide md:flex">
+          {NAV_LINKS.map((link) => (
+            <Link key={link.href} href={link.href} className="hover:text-red-600">
+              {link.label}
             </Link>
           ))}
+          <Link href="/contact" className="bg-red-600 px-3 py-1.5 text-white hover:bg-red-700">
+            Submit Music
+          </Link>
         </nav>
         <SearchIcon />
       </div>

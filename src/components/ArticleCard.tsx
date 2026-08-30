@@ -1,9 +1,11 @@
 import Link from 'next/link';
 import type { ArticleSummary } from '@/lib/api';
 import { formatDate, primaryCategoryOf } from '@/lib/format';
+import { editorialTypeLabel } from '@/lib/editorial-types';
 
 export function ArticleCard({ article }: { article: ArticleSummary }) {
   const primaryCategory = primaryCategoryOf(article);
+  const editorialLabel = editorialTypeLabel(article.editorialType);
 
   return (
     <article className="group flex flex-col gap-3">
@@ -18,13 +20,16 @@ export function ArticleCard({ article }: { article: ArticleSummary }) {
         ) : null}
       </Link>
       <div className="flex flex-col gap-1.5">
-        {primaryCategory ? (
-          <Link
-            href={`/category/${primaryCategory.slug}`}
-            className="text-xs font-semibold uppercase tracking-wide text-red-600 hover:underline"
-          >
-            {primaryCategory.name}
-          </Link>
+        {primaryCategory || editorialLabel ? (
+          <div className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wide">
+            {primaryCategory ? (
+              <Link href={`/category/${primaryCategory.slug}`} className="text-red-600 hover:underline">
+                {primaryCategory.name}
+              </Link>
+            ) : null}
+            {primaryCategory && editorialLabel ? <span className="text-neutral-300">&middot;</span> : null}
+            {editorialLabel ? <span className="text-neutral-500">{editorialLabel}</span> : null}
+          </div>
         ) : null}
         <h3 className="text-lg font-semibold leading-snug">
           <Link href={`/${article.slug}`} className="hover:underline">

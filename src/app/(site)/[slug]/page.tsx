@@ -11,6 +11,7 @@ import {
   parseYoutubeEmbedUrl,
 } from '@/lib/format';
 import { SITE_URL } from '@/lib/site';
+import { editorialTypeLabel } from '@/lib/editorial-types';
 import { ShareBar } from '@/components/ShareBar';
 import { AuthorCard } from '@/components/AuthorCard';
 import { ArticleLatestPosts } from '@/components/ArticleLatestPosts';
@@ -60,6 +61,7 @@ export default async function ArticlePage({ params }: Props) {
   if (!article) notFound();
 
   const primaryCategory = primaryCategoryOf(article);
+  const editorialLabel = editorialTypeLabel(article.editorialType);
   const readingTime = estimateReadingTimeMinutes(article.content);
   const spotifyEmbedUrl = parseSpotifyEmbedUrl(article.spotifyUrl);
   const soundcloudEmbedUrl = buildSoundcloudEmbedUrl(article.soundcloudUrl);
@@ -88,16 +90,23 @@ export default async function ArticlePage({ params }: Props) {
             ) : null}
             <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/30 to-transparent" />
             <div className="absolute inset-x-0 bottom-0 flex flex-col gap-3 p-6">
-              {article.isFeatured ? (
-                <span className="inline-block w-fit bg-red-600 px-2 py-1 text-xs font-bold uppercase tracking-wide text-white">Featured</span>
-              ) : primaryCategory ? (
-                <Link
-                  href={`/category/${primaryCategory.slug}`}
-                  className="inline-block w-fit bg-red-600 px-2 py-1 text-xs font-bold uppercase tracking-wide text-white hover:bg-red-700"
-                >
-                  {primaryCategory.name}
-                </Link>
-              ) : null}
+              <div className="flex flex-wrap items-center gap-2">
+                {article.isFeatured ? (
+                  <span className="inline-block w-fit bg-red-600 px-2 py-1 text-xs font-bold uppercase tracking-wide text-white">Featured</span>
+                ) : primaryCategory ? (
+                  <Link
+                    href={`/category/${primaryCategory.slug}`}
+                    className="inline-block w-fit bg-red-600 px-2 py-1 text-xs font-bold uppercase tracking-wide text-white hover:bg-red-700"
+                  >
+                    {primaryCategory.name}
+                  </Link>
+                ) : null}
+                {editorialLabel ? (
+                  <span className="inline-block w-fit border border-white/40 px-2 py-1 text-xs font-bold uppercase tracking-wide text-white">
+                    {editorialLabel}
+                  </span>
+                ) : null}
+              </div>
               <h1 className="text-2xl font-semibold leading-tight text-white sm:text-4xl">{article.title}</h1>
               <div className="flex items-center gap-2 text-sm text-neutral-200">
                 {article.publishedAt ? <span>{formatDate(article.publishedAt)}</span> : null}

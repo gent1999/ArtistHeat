@@ -59,6 +59,8 @@ async function authorEntries(): Promise<MetadataRoute.Sitemap> {
   }
 }
 
+const EDITORIAL_ARCHIVE_PATHS = ['/interviews', '/artists', '/music-reviews', '/new-releases'];
+
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const [articles, categories, tags, authors] = await Promise.all([
     articleEntries(),
@@ -67,5 +69,11 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     authorEntries(),
   ]);
 
-  return [{ url: SITE_URL, lastModified: new Date() }, ...articles, ...categories, ...tags, ...authors];
+  const staticEntries: MetadataRoute.Sitemap = [
+    { url: SITE_URL, lastModified: new Date() },
+    { url: `${SITE_URL}/heat-check` },
+    ...EDITORIAL_ARCHIVE_PATHS.map((path) => ({ url: `${SITE_URL}${path}` })),
+  ];
+
+  return [...staticEntries, ...articles, ...categories, ...tags, ...authors];
 }
