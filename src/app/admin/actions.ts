@@ -378,3 +378,24 @@ export async function deleteUserAction(userId: number): Promise<{ error?: string
   revalidatePath('/admin/users');
   return {};
 }
+
+export async function updateHomepageSpotifyPlaylistAction(
+  _prevState: { error?: string } | undefined,
+  formData: FormData
+) {
+  const token = await getSessionToken();
+  if (!token) redirect('/admin/login');
+
+  const url = String(formData.get('homepageSpotifyPlaylistUrl') || '').trim() || null;
+
+  try {
+    await api.updateSiteSettings({ homepageSpotifyPlaylistUrl: url }, token);
+  } catch (err) {
+    if (err instanceof ApiError) return { error: err.message };
+    return { error: 'Something went wrong saving the playlist. Try again.' };
+  }
+
+  revalidatePath('/admin/spotify');
+  revalidatePath('/');
+  return {};
+}

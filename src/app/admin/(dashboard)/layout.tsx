@@ -48,6 +48,9 @@ export default async function AdminDashboardLayout({ children }: { children: Rea
             <span>All Articles</span>
             <span className="text-xs text-neutral-400">{pagination.total}</span>
           </Link>
+          <Link href="/admin/spotify" className={navLinkClass}>
+            Spotify
+          </Link>
 
           {isAdmin ? (
             <>

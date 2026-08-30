@@ -117,6 +117,10 @@ export interface AdminAccount {
   createdAt: string;
 }
 
+export interface SiteSettings {
+  homepageSpotifyPlaylistUrl: string | null;
+}
+
 export interface AnalyticsOverview {
   analytics: {
     last7Days: { sessions: number; activeUsers: number; pageviews: number };
@@ -271,4 +275,9 @@ export const api = {
 
   getAnalyticsOverview: (token: string) =>
     request<AnalyticsOverview>('/api/analytics/overview', { token, cache: 'no-store' }),
+
+  getSiteSettings: () => request<{ settings: SiteSettings }>('/api/settings', { cache: 'no-store' }),
+
+  updateSiteSettings: (data: Partial<SiteSettings>, token: string) =>
+    request<{ settings: SiteSettings }>('/api/settings', { method: 'PUT', body: JSON.stringify(data), token }),
 };
