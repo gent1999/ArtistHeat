@@ -11,7 +11,7 @@ import {
   parseYoutubeEmbedUrl,
 } from '@/lib/format';
 import { SITE_URL } from '@/lib/site';
-import { editorialTypeLabel } from '@/lib/editorial-types';
+import { editorialTypeLabelsOf } from '@/lib/editorial-types';
 import { ShareBar } from '@/components/ShareBar';
 import { AuthorCard } from '@/components/AuthorCard';
 import { ArticleLatestPosts } from '@/components/ArticleLatestPosts';
@@ -61,7 +61,7 @@ export default async function ArticlePage({ params }: Props) {
   if (!article) notFound();
 
   const primaryCategory = primaryCategoryOf(article);
-  const editorialLabel = editorialTypeLabel(article.editorialType);
+  const editorialLabels = editorialTypeLabelsOf(article);
   const readingTime = estimateReadingTimeMinutes(article.content);
   const spotifyEmbedUrl = parseSpotifyEmbedUrl(article.spotifyUrl);
   const soundcloudEmbedUrl = buildSoundcloudEmbedUrl(article.soundcloudUrl);
@@ -101,11 +101,14 @@ export default async function ArticlePage({ params }: Props) {
                     {primaryCategory.name}
                   </Link>
                 ) : null}
-                {editorialLabel ? (
-                  <span className="inline-block w-fit border border-white/40 px-2 py-1 text-xs font-bold uppercase tracking-wide text-white">
-                    {editorialLabel}
+                {editorialLabels.map((label) => (
+                  <span
+                    key={label}
+                    className="inline-block w-fit border border-white/40 px-2 py-1 text-xs font-bold uppercase tracking-wide text-white"
+                  >
+                    {label}
                   </span>
-                ) : null}
+                ))}
               </div>
               <h1 className="text-2xl font-semibold leading-tight text-white sm:text-4xl">{article.title}</h1>
               <div className="flex items-center gap-2 text-sm text-neutral-200">

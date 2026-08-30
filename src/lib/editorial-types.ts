@@ -32,3 +32,15 @@ export function editorialTypeLabel(type: string | null | undefined): string | nu
   if (!type) return null;
   return EDITORIAL_TYPE_LABELS[type as EditorialType] ?? null;
 }
+
+// An article can carry several editorial types at once (like categories) --
+// this pulls the plain list of type strings off the API's nested shape.
+export function editorialTypesOf(article: { articleEditorialTypes?: { editorialType: string }[] }): string[] {
+  return (article.articleEditorialTypes ?? []).map((e) => e.editorialType);
+}
+
+export function editorialTypeLabelsOf(article: { articleEditorialTypes?: { editorialType: string }[] }): string[] {
+  return editorialTypesOf(article)
+    .map((type) => editorialTypeLabel(type))
+    .filter((label): label is string => Boolean(label));
+}

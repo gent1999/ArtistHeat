@@ -1,11 +1,13 @@
 import Link from 'next/link';
 import type { ArticleSummary } from '@/lib/api';
 import { formatDate, primaryCategoryOf } from '@/lib/format';
-import { editorialTypeLabel } from '@/lib/editorial-types';
+import { editorialTypeLabelsOf } from '@/lib/editorial-types';
 
 export function ArticleCard({ article }: { article: ArticleSummary }) {
   const primaryCategory = primaryCategoryOf(article);
-  const editorialLabel = editorialTypeLabel(article.editorialType);
+  // Cards stay subtle -- show only the first editorial type even if the
+  // article carries several; the full set shows on the article page itself.
+  const editorialLabel = editorialTypeLabelsOf(article)[0] ?? null;
 
   return (
     <article className="group flex flex-col gap-3">

@@ -6,7 +6,7 @@ import { updateArticleAction } from '../../../../actions';
 import { uploadImageToCloudinary } from '@/lib/upload';
 import { ContentEditor } from '../../ContentEditor';
 import { GallerySlots } from '../../GallerySlots';
-import { EDITORIAL_TYPES, EDITORIAL_TYPE_LABELS } from '@/lib/editorial-types';
+import { EDITORIAL_TYPES, EDITORIAL_TYPE_LABELS, editorialTypesOf } from '@/lib/editorial-types';
 import type { Author, Category, ArticleDetail } from '@/lib/api';
 
 function SubmitButton() {
@@ -41,6 +41,7 @@ export function EditArticleForm({
   const [slug, setSlug] = useState(article.slug);
   const initialCategoryIds = (article.articleCategories ?? []).map((ac) => ac.category.id);
   const initialPrimaryId = (article.articleCategories ?? []).find((ac) => ac.isPrimary)?.category.id ?? null;
+  const initialEditorialTypes = editorialTypesOf(article);
   const [checkedCategoryIds, setCheckedCategoryIds] = useState<number[]>(initialCategoryIds);
   const [featuredImageUrl, setFeaturedImageUrl] = useState(article.featuredImage?.sourceUrl ?? '');
   const [uploading, setUploading] = useState(false);
@@ -282,22 +283,26 @@ export function EditArticleForm({
         <p className="mt-1 text-xs text-neutral-500">Existing tags will be reused; anything new gets created.</p>
       </div>
 
-      <div>
-        <label htmlFor="editorialType" className={labelClass}>
-          Editorial Type (optional)
-        </label>
-        <select id="editorialType" name="editorialType" defaultValue={article.editorialType ?? ''} className={inputClass}>
-          <option value="">No editorial type</option>
+      <fieldset>
+        <legend className={labelClass}>Editorial Type (optional)</legend>
+        <div className="grid grid-cols-2 gap-x-4 gap-y-2 border border-neutral-300 p-3">
           {EDITORIAL_TYPES.map((type) => (
-            <option key={type} value={type}>
+            <label key={type} className="flex items-center gap-2 text-sm">
+              <input
+                type="checkbox"
+                name="editorialTypes"
+                value={type}
+                defaultChecked={initialEditorialTypes.includes(type)}
+              />
               {EDITORIAL_TYPE_LABELS[type]}
-            </option>
+            </label>
           ))}
-        </select>
+        </div>
         <p className="mt-1 text-xs text-neutral-500">
-          Controls which homepage rails (Fresh Heat, Face of the Heat, etc.) this article can appear in.
+          Like categories, an article can have several. Controls which homepage rails (Fresh Heat, Face of the Heat,
+          etc.) it can appear in.
         </p>
-      </div>
+      </fieldset>
 
       <div className="flex items-center gap-6 border border-neutral-300 p-3">
         <label className="flex items-center gap-2 text-sm font-medium">

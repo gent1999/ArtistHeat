@@ -1,12 +1,12 @@
 import Link from 'next/link';
 import type { ArticleSummary } from '@/lib/api';
-import { editorialTypeLabel } from '@/lib/editorial-types';
+import { editorialTypeLabelsOf } from '@/lib/editorial-types';
 
 // Portrait, image-forward cards -- deliberately taller/more photo-led than
 // the standard ArticleCard grid, since this rail exists specifically to put
 // artist faces front and center.
 function FaceOfTheHeatCard({ article }: { article: ArticleSummary }) {
-  const editorialLabel = editorialTypeLabel(article.editorialType);
+  const editorialLabel = editorialTypeLabelsOf(article)[0] ?? null;
 
   return (
     <Link href={`/${article.slug}`} className="group relative block aspect-[3/4] overflow-hidden bg-neutral-900">

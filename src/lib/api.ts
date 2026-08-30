@@ -40,12 +40,12 @@ export interface ArticleSummary {
   updatedAt?: string | null;
   isFeatured?: boolean;
   featuredOrder?: number | null;
-  editorialType?: string | null;
   isTrending?: boolean;
   isEditorsPick?: boolean;
   author: { id: number; name: string; slug: string } | null;
   featuredImage: { id: number; sourceUrl: string; altText: string | null } | null;
   articleCategories?: { isPrimary: boolean; category: { id: number; name: string; slug: string } }[];
+  articleEditorialTypes?: { editorialType: string }[];
   // Admin-only: which admin account posted this. Only present when the
   // request was authenticated -- the backend never sends it to anonymous
   // (public) callers.
@@ -172,7 +172,7 @@ export interface ArticleWriteInput {
   youtubeUrl?: string | null;
   isFeatured?: boolean;
   featuredOrder?: number | null;
-  editorialType?: string | null;
+  editorialTypes?: string[];
   isTrending?: boolean;
   isEditorsPick?: boolean;
   categoryIds: number[];
