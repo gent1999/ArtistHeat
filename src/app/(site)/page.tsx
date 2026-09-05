@@ -7,7 +7,16 @@ import { HeatCheckSection } from '@/components/HeatCheckSection';
 import { Sidebar } from '@/components/Sidebar';
 import { SITE_URL } from '@/lib/site';
 
+// `absolute` bypasses the root layout's title.template ("%s | ArtistHeat")
+// -- without it this would render as "...Culture | ArtistHeat", duplicating
+// the brand name. openGraph/twitter are deliberately left undefined here:
+// Next.js resolves their title/description from these same fields, and the
+// banner image/siteName/card type stay inherited from the root layout
+// rather than being redefined (and risking drifting out of sync) here.
 export const metadata: Metadata = {
+  title: { absolute: 'ArtistHeat - Hip-Hop News, Artist Interviews, Reviews & Culture' },
+  description:
+    'Discover the latest hip-hop and R&B news, artist interviews, music reviews, underground artists, and culture on ArtistHeat.',
   alternates: { canonical: SITE_URL },
 };
 
