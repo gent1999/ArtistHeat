@@ -37,6 +37,11 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
   const title = article.seoTitle || article.title;
   const description = article.seoDescription || article.excerpt || undefined;
+  // Falls back to the site banner when the article has no image of its
+  // own -- an article's openGraph/twitter blocks fully replace (not merge
+  // with) the root layout's defaults, so without this an imageless article
+  // would share with no preview image at all instead of inheriting one.
+  const shareImage = article.ogImageUrl || article.featuredImage?.sourceUrl || '/artistheat_banner.png';
 
   return {
     title,
@@ -50,7 +55,13 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       title,
       description,
       type: 'article',
-      images: article.ogImageUrl || article.featuredImage?.sourceUrl ? [article.ogImageUrl || article.featuredImage!.sourceUrl] : undefined,
+      images: [shareImage],
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title,
+      description,
+      images: [shareImage],
     },
   };
 }

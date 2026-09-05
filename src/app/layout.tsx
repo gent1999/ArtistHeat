@@ -19,6 +19,18 @@ export const metadata: Metadata = {
     template: "%s | ArtistHeat",
   },
   description: "Music, art, and culture.",
+  // Site-wide fallback share image (link unfurls on X, Discord, etc.) for
+  // every page that doesn't set its own -- articles override this with
+  // their featured image when they have one (see [slug]/page.tsx).
+  openGraph: {
+    siteName: "ArtistHeat",
+    type: "website",
+    images: [{ url: "/artistheat_banner.png", width: 1916, height: 821 }],
+  },
+  twitter: {
+    card: "summary_large_image",
+    images: ["/artistheat_banner.png"],
+  },
   // Only emitted once a real code exists -- if artistheat.com is already
   // verified via DNS TXT record in Search Console, this isn't needed at
   // all; leave the env var unset in that case.
