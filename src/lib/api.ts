@@ -181,6 +181,174 @@ export interface ArticleWriteInput {
   galleryImageIds?: number[];
 }
 
+// -- Finance ------------------------------------------------------------
+
+export type FeeType = 'none' | 'percentage' | 'fixed';
+export type SourceStatus = 'active' | 'pending' | 'inactive';
+export type RevenuePaymentStatus = 'pending' | 'paid' | 'cancelled';
+export type FinancePayoutStatus = 'not_ready' | 'ready_for_payout' | 'paid_out';
+export type ExpenseCategory = 'domain' | 'hosting' | 'software' | 'ads' | 'other';
+export type BillingCycle = 'one_time' | 'monthly' | 'yearly';
+export type ExpensePaymentStatus = 'paid' | 'pending';
+
+export interface FinanceSource {
+  id: number;
+  name: string;
+  type: string;
+  defaultGross: number;
+  feeType: FeeType;
+  feeValue: number;
+  payoutThreshold: number;
+  status: SourceStatus;
+  notes: string | null;
+  createdAt: string;
+  updatedAt: string;
+  current_balance: number;
+  lifetime_net: number;
+  entry_count: number;
+  last_entry_date: string | null;
+}
+
+export interface FinanceEntry {
+  id: number;
+  date: string;
+  sourceId: number | null;
+  source?: { id: number; name: string } | null;
+  articleTitle: string | null;
+  articleUrl: string | null;
+  clientName: string | null;
+  grossAmount: number;
+  feeAmount: number;
+  netAmount: number;
+  paymentStatus: RevenuePaymentStatus;
+  payoutStatus: FinancePayoutStatus;
+  notes: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface FinancePayout {
+  id: number;
+  sourceId: number | null;
+  source?: { id: number; name: string } | null;
+  amount: number;
+  date: string;
+  notes: string | null;
+  createdAt: string;
+}
+
+export interface FinanceExpense {
+  id: number;
+  name: string;
+  category: ExpenseCategory;
+  amount: number;
+  billingCycle: BillingCycle;
+  vendor: string | null;
+  renewalDate: string | null;
+  paymentStatus: ExpensePaymentStatus;
+  notes: string | null;
+  createdAt: string;
+  updatedAt: string;
+  days_until_renewal: number | null;
+}
+
+export interface FinanceSummary {
+  totalGrossRevenue: number;
+  totalNetRevenue: number;
+  paidRevenue: number;
+  pendingRevenue: number;
+  totalExpenses: number;
+  lifetimeProfit: number;
+  currentMonthRevenue: number;
+  lastMonthRevenue: number;
+  currentMonthProfit: number;
+  monthlyExpenses: number;
+  payoutProgressBySource: {
+    sourceId: number;
+    sourceName: string;
+    pendingBalance: number;
+    threshold: number;
+    remaining: number;
+    progress: number;
+    ready: boolean;
+  }[];
+  upcomingRenewals: { id: number; name: string; amount: number; renewalDate: string; daysUntil: number }[];
+}
+
+export interface FinanceMonthlyTrend {
+  trend: { month: string; label: string; revenue: number; expenses: number; profit: number }[];
+  availableYears: number[];
+  range: string;
+}
+
+export interface FinanceTransaction {
+  id: number;
+  kind: 'income' | 'expense' | 'payout';
+  date: string;
+  source_id: number | null;
+  source_name: string | null;
+  description: string;
+  amount: number;
+  article_title: string | null;
+  client_name: string | null;
+  vendor: string | null;
+  category: string | null;
+  billing_cycle: string | null;
+  renewal_date: string | null;
+  gross_amount: number | null;
+  fee_amount: number | null;
+  net_amount: number | null;
+  payment_status: string | null;
+  payout_status: string | null;
+  article_url: string | null;
+  notes: string | null;
+  created_at: string;
+}
+
+export interface FinanceSourceInput {
+  name: string;
+  type?: string;
+  defaultGross?: number;
+  feeType?: FeeType;
+  feeValue?: number;
+  payoutThreshold?: number;
+  status?: SourceStatus;
+  notes?: string | null;
+}
+
+export interface FinanceEntryInput {
+  date?: string;
+  sourceId?: number | null;
+  articleTitle?: string | null;
+  articleUrl?: string | null;
+  clientName?: string | null;
+  grossAmount: number;
+  feeAmount?: number;
+  netAmount?: number;
+  paymentStatus?: RevenuePaymentStatus;
+  payoutStatus?: FinancePayoutStatus;
+  notes?: string | null;
+}
+
+export interface FinancePayoutInput {
+  sourceId: number | null;
+  amount: number;
+  date?: string;
+  notes?: string | null;
+  markEntriesPaid?: boolean;
+}
+
+export interface FinanceExpenseInput {
+  name: string;
+  category?: ExpenseCategory;
+  amount: number;
+  billingCycle?: BillingCycle;
+  vendor?: string | null;
+  renewalDate?: string | null;
+  paymentStatus?: ExpensePaymentStatus;
+  notes?: string | null;
+}
+
 export const api = {
   getHome: () => request<HomeData>('/api/home', { cache: 'no-store' }),
 
@@ -293,4 +461,95 @@ export const api = {
 
   updateSiteSettings: (data: Partial<SiteSettings>, token: string) =>
     request<{ settings: SiteSettings }>('/api/settings', { method: 'PUT', body: JSON.stringify(data), token }),
+
+  // -- Finance ------------------------------------------------------------
+
+  getFinanceSummary: (token: string) => request<FinanceSummary>('/api/finance/summary', { token, cache: 'no-store' }),
+
+  getFinanceMonthlyTrend: (range: string, token: string) =>
+    request<FinanceMonthlyTrend>(`/api/finance/monthly-trend?range=${encodeURIComponent(range)}`, { token, cache: 'no-store' }),
+
+  listFinanceSources: (token: string) =>
+    request<{ sources: FinanceSource[] }>('/api/finance/sources', { token, cache: 'no-store' }),
+
+  createFinanceSource: (data: FinanceSourceInput, token: string) =>
+    request<{ source: FinanceSource }>('/api/finance/sources', { method: 'POST', body: JSON.stringify(data), token }),
+
+  updateFinanceSource: (id: number, data: Partial<FinanceSourceInput>, token: string) =>
+    request<{ source: FinanceSource }>(`/api/finance/sources/${id}`, { method: 'PUT', body: JSON.stringify(data), token }),
+
+  deleteFinanceSource: (id: number, token: string) =>
+    request<void>(`/api/finance/sources/${id}`, { method: 'DELETE', token }),
+
+  listFinanceEntries: (
+    params: {
+      source_id?: number;
+      payment_status?: string;
+      payout_status?: string;
+      from?: string;
+      to?: string;
+    } = {},
+    token?: string
+  ) => {
+    const qs = new URLSearchParams();
+    if (params.source_id !== undefined) qs.set('source_id', String(params.source_id));
+    if (params.payment_status) qs.set('payment_status', params.payment_status);
+    if (params.payout_status) qs.set('payout_status', params.payout_status);
+    if (params.from) qs.set('from', params.from);
+    if (params.to) qs.set('to', params.to);
+    return request<{ entries: FinanceEntry[]; totals: { gross: number; fee: number; net: number } }>(
+      `/api/finance/entries?${qs}`,
+      { token, cache: 'no-store' }
+    );
+  },
+
+  createFinanceEntry: (data: FinanceEntryInput, token: string) =>
+    request<{ entry: FinanceEntry }>('/api/finance/entries', { method: 'POST', body: JSON.stringify(data), token }),
+
+  updateFinanceEntry: (id: number, data: Partial<FinanceEntryInput>, token: string) =>
+    request<{ entry: FinanceEntry }>(`/api/finance/entries/${id}`, { method: 'PUT', body: JSON.stringify(data), token }),
+
+  deleteFinanceEntry: (id: number, token: string) =>
+    request<void>(`/api/finance/entries/${id}`, { method: 'DELETE', token }),
+
+  listFinancePayouts: (params: { source_id?: number } = {}, token?: string) => {
+    const qs = new URLSearchParams();
+    if (params.source_id !== undefined) qs.set('source_id', String(params.source_id));
+    return request<{ payouts: FinancePayout[] }>(`/api/finance/payouts?${qs}`, { token, cache: 'no-store' });
+  },
+
+  createFinancePayout: (data: FinancePayoutInput, token: string) =>
+    request<{ payout: FinancePayout }>('/api/finance/payouts', { method: 'POST', body: JSON.stringify(data), token }),
+
+  deleteFinancePayout: (id: number, token: string) =>
+    request<void>(`/api/finance/payouts/${id}`, { method: 'DELETE', token }),
+
+  listFinanceExpenses: (token: string) =>
+    request<{ expenses: FinanceExpense[]; totals: { total: number; monthly: number; yearly: number } }>(
+      '/api/finance/expenses',
+      { token, cache: 'no-store' }
+    ),
+
+  createFinanceExpense: (data: FinanceExpenseInput, token: string) =>
+    request<{ expense: FinanceExpense }>('/api/finance/expenses', { method: 'POST', body: JSON.stringify(data), token }),
+
+  updateFinanceExpense: (id: number, data: Partial<FinanceExpenseInput>, token: string) =>
+    request<{ expense: FinanceExpense }>(`/api/finance/expenses/${id}`, { method: 'PUT', body: JSON.stringify(data), token }),
+
+  deleteFinanceExpense: (id: number, token: string) =>
+    request<void>(`/api/finance/expenses/${id}`, { method: 'DELETE', token }),
+
+  listFinanceTransactions: (
+    params: { type?: string; source_id?: number; from?: string; to?: string; payment_status?: string; limit?: number } = {},
+    token?: string
+  ) => {
+    const qs = new URLSearchParams();
+    if (params.type) qs.set('type', params.type);
+    if (params.source_id !== undefined) qs.set('source_id', String(params.source_id));
+    if (params.from) qs.set('from', params.from);
+    if (params.to) qs.set('to', params.to);
+    if (params.payment_status) qs.set('payment_status', params.payment_status);
+    if (params.limit !== undefined) qs.set('limit', String(params.limit));
+    return request<{ transactions: FinanceTransaction[] }>(`/api/finance/transactions?${qs}`, { token, cache: 'no-store' });
+  },
 };
