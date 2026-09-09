@@ -212,6 +212,16 @@ export function AddTransactionModal({
                     <input name="name" defaultValue={editing?.description ?? ''} required className={inputClass} />
                   </div>
                   <div>
+                    <label className={labelClass}>Date</label>
+                    <input
+                      type="date"
+                      name="date"
+                      defaultValue={isoDate(editing?.date) || new Date().toISOString().slice(0, 10)}
+                      className={inputClass}
+                    />
+                    <p className="mt-1 text-xs text-neutral-500">When this expense was actually incurred -- not just today.</p>
+                  </div>
+                  <div>
                     <label className={labelClass}>Vendor</label>
                     <input name="vendor" defaultValue={editing?.vendor ?? ''} className={inputClass} />
                   </div>

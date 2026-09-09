@@ -347,6 +347,8 @@ export interface FinanceExpenseInput {
   renewalDate?: string | null;
   paymentStatus?: ExpensePaymentStatus;
   notes?: string | null;
+  // The effective/incurred date -- stored as createdAt, no separate column.
+  date?: string;
 }
 
 export const api = {

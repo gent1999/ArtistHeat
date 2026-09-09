@@ -144,6 +144,7 @@ export async function saveTransactionAction(
         paymentStatus: (String(formData.get('expensePaymentStatus') || 'paid') as ExpensePaymentStatus) || 'paid',
         renewalDate: String(formData.get('renewalDate') || '').trim() || null,
         notes: String(formData.get('notes') || '').trim() || null,
+        date: String(formData.get('date') || '').trim() || undefined,
       };
       if (editing && editing.kind === 'expense') {
         await api.updateFinanceExpense(editing.id, payload, token);
