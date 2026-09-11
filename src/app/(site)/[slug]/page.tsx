@@ -42,6 +42,16 @@ async function findLegacyRedirect(path: string) {
   }
 }
 
+// Required for ISR on a dynamic segment at all -- without generateStaticParams
+// (even an empty one), Next server-renders this route on every request
+// regardless of getArticle's own revalidate/tags. Returning [] means no
+// article is prerendered at build (dynamicParams defaults to true), so the
+// first request for a given slug renders live and every one after that is
+// served from cache until the revalidate window or an admin updateTag/purge.
+export async function generateStaticParams(): Promise<{ slug: string }[]> {
+  return [];
+}
+
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params;
   const article = await loadArticle(slug);
