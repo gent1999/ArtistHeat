@@ -351,8 +351,22 @@ export interface FinanceExpenseInput {
   date?: string;
 }
 
+// Shared on-demand cache tag for every public fetch whose result depends on
+// article data (home, article detail, listings, category/tag/author
+// archives). A single broad tag keeps invalidation simple: any publish/edit/
+// delete/feature-toggle in admin/actions.ts calls updateTag('articles') once
+// and every public page relying on article data picks up the change on its
+// very next request, regardless of the time-based revalidate window below.
+const ARTICLES_TAG = 'articles';
+// Ceiling on how stale public content can get if a mutation ever happens
+// without going through admin/actions.ts (e.g. a future script/back-office
+// tool hitting the backend directly). Normal admin edits refresh instantly
+// via updateTag, independent of this window.
+const PUBLIC_REVALIDATE_SECONDS = 3600;
+
 export const api = {
-  getHome: () => request<HomeData>('/api/home', { cache: 'no-store' }),
+  getHome: () =>
+    request<HomeData>('/api/home', { next: { revalidate: PUBLIC_REVALIDATE_SECONDS, tags: [ARTICLES_TAG] } }),
 
   listArticles: (
     params: {
@@ -378,30 +392,44 @@ export const api = {
     if (params.isTrending !== undefined) qs.set('isTrending', String(params.isTrending));
     if (params.isEditorsPick !== undefined) qs.set('isEditorsPick', String(params.isEditorsPick));
     if (params.status) qs.set('status', params.status);
-    return request<{ articles: ArticleSummary[]; pagination: Pagination }>(`/api/articles?${qs}`, { token, cache: 'no-store' });
+    // Admin callers (token present) always need the current, uncached state
+    // (e.g. the featured-toggle logic reading isFeatured counts mid-edit) --
+    // only anonymous/public reads are safe to cache, since the Data Cache
+    // key doesn't vary on the Authorization header.
+    return request<{ articles: ArticleSummary[]; pagination: Pagination }>(
+      `/api/articles?${qs}`,
+      token
+        ? { token, cache: 'no-store' }
+        : { next: { revalidate: PUBLIC_REVALIDATE_SECONDS, tags: [ARTICLES_TAG] } }
+    );
   },
 
   getArticle: (slug: string, token?: string) =>
-    request<{ article: ArticleDetail }>(`/api/articles/${encodeURIComponent(slug)}`, { token, cache: 'no-store' }),
+    request<{ article: ArticleDetail }>(
+      `/api/articles/${encodeURIComponent(slug)}`,
+      token
+        ? { token, cache: 'no-store' }
+        : { next: { revalidate: PUBLIC_REVALIDATE_SECONDS, tags: [ARTICLES_TAG] } }
+    ),
 
   listCategories: () => request<{ categories: Category[] }>('/api/categories', { next: { revalidate: 300 } }),
 
   getCategory: (slug: string, page = 1) =>
     request<{ category: Category; articles: ArticleSummary[]; pagination: Pagination }>(
       `/api/categories/${encodeURIComponent(slug)}?page=${page}`,
-      { cache: 'no-store' }
+      { next: { revalidate: PUBLIC_REVALIDATE_SECONDS, tags: [ARTICLES_TAG] } }
     ),
 
   getTag: (slug: string, page = 1) =>
     request<{ tag: Tag; articles: ArticleSummary[]; pagination: Pagination }>(
       `/api/tags/${encodeURIComponent(slug)}?page=${page}`,
-      { cache: 'no-store' }
+      { next: { revalidate: PUBLIC_REVALIDATE_SECONDS, tags: [ARTICLES_TAG] } }
     ),
 
   getAuthor: (slug: string, page = 1) =>
     request<{ author: Author; articles: ArticleSummary[]; pagination: Pagination }>(
       `/api/authors/${encodeURIComponent(slug)}?page=${page}`,
-      { cache: 'no-store' }
+      { next: { revalidate: PUBLIC_REVALIDATE_SECONDS, tags: [ARTICLES_TAG] } }
     ),
 
   lookupRedirect: (path: string) =>
@@ -459,7 +487,10 @@ export const api = {
   getAnalyticsOverview: (token: string) =>
     request<AnalyticsOverview>('/api/analytics/overview', { token, cache: 'no-store' }),
 
-  getSiteSettings: () => request<{ settings: SiteSettings }>('/api/settings', { cache: 'no-store' }),
+  getSiteSettings: () =>
+    request<{ settings: SiteSettings }>('/api/settings', {
+      next: { revalidate: PUBLIC_REVALIDATE_SECONDS, tags: ['site-settings'] },
+    }),
 
   updateSiteSettings: (data: Partial<SiteSettings>, token: string) =>
     request<{ settings: SiteSettings }>('/api/settings', { method: 'PUT', body: JSON.stringify(data), token }),

@@ -2,10 +2,13 @@ import type { MetadataRoute } from 'next';
 import { api } from '@/lib/api';
 import { SITE_URL } from '@/lib/site';
 
-// Rendered per-request rather than baked in at build time -- the article
-// list changes constantly via the admin panel, and a build-time snapshot
-// would go stale until the next deploy.
-export const dynamic = 'force-dynamic';
+// ISR rather than force-dynamic or a build-time-only snapshot: crawlers
+// don't need up-to-the-second freshness, and the underlying api.* calls
+// already refresh instantly on publish/edit/delete via updateTag
+// ('articles') in admin/actions.ts. This just bounds the worst case (a
+// mutation that bypasses that action) instead of re-querying the backend
+// for every article/category/tag/author on every crawl.
+export const revalidate = 3600;
 
 // Every section is independently wrapped in try/catch: a temporary backend
 // outage should degrade the sitemap (skip that section), never fail the

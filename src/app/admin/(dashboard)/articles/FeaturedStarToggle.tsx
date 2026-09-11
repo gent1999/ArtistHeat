@@ -18,10 +18,12 @@ const LABELS: Record<FeaturedLevel, string> = {
 
 export function FeaturedStarToggle({
   articleId,
+  articleSlug,
   isFeatured,
   featuredOrder,
 }: {
   articleId: number;
+  articleSlug: string;
   isFeatured: boolean;
   featuredOrder: number | null | undefined;
 }) {
@@ -41,7 +43,7 @@ export function FeaturedStarToggle({
     const nextLevel = ((level + 1) % 3) as FeaturedLevel;
     setError(null);
     startTransition(async () => {
-      const result = await setFeaturedLevelAction(articleId, nextLevel);
+      const result = await setFeaturedLevelAction(articleId, articleSlug, nextLevel);
       if (result.error) setError(result.error);
       router.refresh();
     });

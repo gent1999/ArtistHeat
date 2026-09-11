@@ -1,10 +1,12 @@
 'use server';
 
 import { redirect } from 'next/navigation';
-import { revalidatePath } from 'next/cache';
+import { revalidatePath, updateTag } from 'next/cache';
 import { ApiError, api } from '@/lib/api';
 import { clearSessionToken, setSessionToken, getSessionToken } from '@/lib/session';
 import { slugify } from '@/lib/format';
+import { articlePurgeUrls, purgeCloudflareUrls } from '@/lib/cloudflare-purge';
+import { SITE_URL } from '@/lib/site';
 
 export async function loginAction(_prevState: { error?: string } | undefined, formData: FormData) {
   const email = String(formData.get('email') || '');
@@ -112,6 +114,7 @@ export async function createArticleAction(_prevState: { error?: string } | undef
     return { error: 'Title, slug, and content are required.' };
   }
 
+  let article;
   try {
     let featuredImageId: number | null = null;
     const imageUrl = String(formData.get('featuredImageUrl') || '').trim();
@@ -130,7 +133,7 @@ export async function createArticleAction(_prevState: { error?: string } | undef
     const featuredOrderRaw = String(formData.get('featuredOrder') || '');
     const galleryImageIds = await resolveGalleryImageIds(formData, token);
 
-    await api.createArticle(
+    ({ article } = await api.createArticle(
       {
         title,
         slug,
@@ -156,12 +159,28 @@ export async function createArticleAction(_prevState: { error?: string } | undef
         galleryImageIds,
       },
       token
-    );
+    ));
   } catch (err) {
     if (err instanceof ApiError) return { error: err.message };
     return { error: 'Something went wrong creating the article. Try again.' };
   }
 
+  // The database write already succeeded at this point -- everything below
+  // is cache invalidation, which must never turn into an error the admin
+  // sees after a successful publish (hence it's outside the try/catch
+  // above). updateTag covers Vercel's own cache instantly; the Cloudflare
+  // purge covers the edge cache sitting in front of it, targeted at only
+  // the URLs this article actually appears on rather than the whole zone.
+  updateTag('articles');
+  await purgeCloudflareUrls(
+    articlePurgeUrls({
+      slug: article.slug,
+      categories: article.articleCategories?.map((ac) => ac.category),
+      tags: article.articleTags?.map((at) => at.tag),
+      authorSlugs: [article.author?.slug],
+      editorialTypes: article.articleEditorialTypes?.map((e) => e.editorialType),
+    })
+  );
   redirect('/admin/articles');
 }
 
@@ -186,6 +205,20 @@ export async function updateArticleAction(
     return { error: 'Title, slug, and content are required.' };
   }
 
+  // Best-effort only, and admin-authenticated (not a public fetch) -- reuses
+  // the same api.getArticle helper the edit page itself already calls, just
+  // to snapshot which categories/tags/author this article is *leaving*
+  // before the edit overwrites them. If it fails, the edit still proceeds;
+  // the purge below just falls back to only the post-edit state (same as
+  // before this existed).
+  let previousArticle: Awaited<ReturnType<typeof api.getArticle>>['article'] | null = null;
+  try {
+    ({ article: previousArticle } = await api.getArticle(currentSlug, token));
+  } catch {
+    previousArticle = null;
+  }
+
+  let article;
   try {
     // Only create a new Media row if the image actually changed -- otherwise
     // every save-without-touching-the-image would leave behind an orphaned
@@ -211,7 +244,7 @@ export async function updateArticleAction(
     const authorId = await resolveAuthorId(String(formData.get('author') || ''), token);
     const galleryImageIds = await resolveGalleryImageIds(formData, token);
 
-    await api.updateArticle(
+    ({ article } = await api.updateArticle(
       articleId,
       {
         title,
@@ -235,16 +268,41 @@ export async function updateArticleAction(
         tagIds,
       },
       token
-    );
+    ));
   } catch (err) {
     if (err instanceof ApiError) return { error: err.message };
     return { error: 'Something went wrong saving the article. Try again.' };
   }
 
+  // Database write already succeeded -- cache invalidation below must never
+  // surface as an error on a successful save (see the comment in
+  // createArticleAction above for why this sits outside the try/catch).
+  updateTag('articles');
   revalidatePath('/admin/articles');
   revalidatePath(`/${currentSlug}`);
   revalidatePath(`/${slug}`);
   revalidatePath('/');
+  // Union of pre- and post-edit categories/tags/author/editorial types --
+  // articlePurgeUrls dedupes by URL, so passing both sets just means a
+  // category/tag/author this article was *removed* from also gets purged
+  // immediately, not only the ones it's in now. previousArticle is null
+  // when the best-effort fetch above failed, in which case this degrades to
+  // exactly the old (post-edit-only) behavior.
+  await purgeCloudflareUrls(
+    articlePurgeUrls({
+      slug: article.slug,
+      previousSlug: currentSlug,
+      categories: [...(previousArticle?.articleCategories ?? []), ...(article.articleCategories ?? [])].map(
+        (ac) => ac.category
+      ),
+      tags: [...(previousArticle?.articleTags ?? []), ...(article.articleTags ?? [])].map((at) => at.tag),
+      authorSlugs: [previousArticle?.author?.slug, article.author?.slug],
+      editorialTypes: [
+        ...(previousArticle?.articleEditorialTypes ?? []),
+        ...(article.articleEditorialTypes ?? []),
+      ].map((e) => e.editorialType),
+    })
+  );
   redirect('/admin/articles');
 }
 
@@ -264,9 +322,19 @@ export type FeaturedLevel = 0 | 1 | 2;
 // (skips the hero state rather than bumping whoever currently holds it).
 // "Only 3 regular" is enforced the same way -- refusing the change rather
 // than guessing which of the existing 3 to bump.
-export async function setFeaturedLevelAction(articleId: number, level: FeaturedLevel): Promise<{ error?: string }> {
+export async function setFeaturedLevelAction(
+  articleId: number,
+  articleSlug: string,
+  level: FeaturedLevel
+): Promise<{ error?: string }> {
   const token = await getSessionToken();
   if (!token) redirect('/admin/login');
+
+  // Featuring never touches categories/tags/author, and ArticleCard (used on
+  // every category/tag/author archive page) doesn't render a featured badge
+  // -- only the homepage's featured section and the article's own page
+  // (`isFeatured` badge) display it, so that's all this ever needs to purge.
+  const purgeFeaturedPages = () => purgeCloudflareUrls([`${SITE_URL}/`, `${SITE_URL}/${articleSlug}`]);
 
   try {
     if (level === 2) {
@@ -274,8 +342,10 @@ export async function setFeaturedLevelAction(articleId: number, level: FeaturedL
       const currentHero = currentlyFeatured.find((a) => a.featuredOrder === HERO_ORDER && a.id !== articleId);
       if (currentHero) {
         await api.updateArticle(articleId, { isFeatured: false, featuredOrder: null }, token);
+        updateTag('articles');
         revalidatePath('/admin/articles');
         revalidatePath('/');
+        await purgeFeaturedPages();
         return { error: 'Only one article can be the big feature. Un-feature it first to promote a different one.' };
       }
       await api.updateArticle(articleId, { isFeatured: true, featuredOrder: HERO_ORDER }, token);
@@ -294,14 +364,28 @@ export async function setFeaturedLevelAction(articleId: number, level: FeaturedL
     return { error: 'Something went wrong updating the featured status.' };
   }
 
+  updateTag('articles');
   revalidatePath('/admin/articles');
   revalidatePath('/');
+  await purgeFeaturedPages();
   return {};
 }
 
 export async function deleteArticleAction(articleId: number, articleSlug: string): Promise<{ error?: string }> {
   const token = await getSessionToken();
   if (!token) redirect('/admin/login');
+
+  // Best-effort only -- once the article is deleted there's no way to look
+  // this back up, so fetch it first purely to know which category/tag/author
+  // pages it was appearing on. If this fails (e.g. already gone), the purge
+  // below just falls back to the article/home/sitemap URLs, which is still
+  // correct, just less targeted -- it never blocks the delete itself.
+  let previousArticle: Awaited<ReturnType<typeof api.getArticle>>['article'] | null = null;
+  try {
+    ({ article: previousArticle } = await api.getArticle(articleSlug, token));
+  } catch {
+    previousArticle = null;
+  }
 
   try {
     await api.deleteArticle(articleId, token);
@@ -310,9 +394,19 @@ export async function deleteArticleAction(articleId: number, articleSlug: string
     return { error: 'Something went wrong deleting the article.' };
   }
 
+  updateTag('articles');
   revalidatePath('/admin/articles');
   revalidatePath(`/${articleSlug}`);
   revalidatePath('/');
+  await purgeCloudflareUrls(
+    articlePurgeUrls({
+      slug: articleSlug,
+      categories: previousArticle?.articleCategories?.map((ac) => ac.category),
+      tags: previousArticle?.articleTags?.map((at) => at.tag),
+      authorSlugs: [previousArticle?.author?.slug],
+      editorialTypes: previousArticle?.articleEditorialTypes?.map((e) => e.editorialType),
+    })
+  );
   return {};
 }
 
@@ -401,7 +495,11 @@ export async function updateHomepageSpotifyPlaylistAction(
     return { error: 'Something went wrong saving the playlist. Try again.' };
   }
 
+  updateTag('site-settings');
   revalidatePath('/admin/spotify');
   revalidatePath('/');
+  // The playlist embed appears on the homepage sidebar and /heat-check --
+  // see HomepageSpotifyWidget and src/app/(site)/heat-check/page.tsx.
+  await purgeCloudflareUrls([`${SITE_URL}/`, `${SITE_URL}/heat-check`]);
   return {};
 }

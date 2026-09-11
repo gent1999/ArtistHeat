@@ -50,7 +50,12 @@ export default async function AdminArticlesPage() {
               </td>
               {isAdmin ? (
                 <td className="py-2">
-                  <FeaturedStarToggle articleId={article.id} isFeatured={Boolean(article.isFeatured)} featuredOrder={article.featuredOrder} />
+                  <FeaturedStarToggle
+                    articleId={article.id}
+                    articleSlug={article.slug}
+                    isFeatured={Boolean(article.isFeatured)}
+                    featuredOrder={article.featuredOrder}
+                  />
                 </td>
               ) : null}
               {isAdmin ? (

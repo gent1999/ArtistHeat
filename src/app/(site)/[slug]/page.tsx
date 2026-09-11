@@ -1,4 +1,4 @@
-import { notFound } from 'next/navigation';
+import { notFound, permanentRedirect, redirect } from 'next/navigation';
 import Link from 'next/link';
 import type { Metadata } from 'next';
 import { api, ApiError } from '@/lib/api';
@@ -27,6 +27,18 @@ async function loadArticle(slug: string) {
   } catch (err) {
     if (err instanceof ApiError && err.status === 404) return null;
     throw err;
+  }
+}
+
+// Checked only when an article actually 404s (renamed/old WordPress slugs),
+// never on a normal article view -- see proxy.ts for why this moved out of
+// the middleware's per-request path.
+async function findLegacyRedirect(path: string) {
+  try {
+    const { redirect: target } = await api.lookupRedirect(path);
+    return target;
+  } catch {
+    return null;
   }
 }
 
@@ -69,7 +81,14 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 export default async function ArticlePage({ params }: Props) {
   const { slug } = await params;
   const article = await loadArticle(slug);
-  if (!article) notFound();
+  if (!article) {
+    const legacy = await findLegacyRedirect(`/${slug}`);
+    if (legacy) {
+      if (legacy.statusCode === 301 || legacy.statusCode === 308) permanentRedirect(legacy.toPath);
+      redirect(legacy.toPath);
+    }
+    notFound();
+  }
 
   const primaryCategory = primaryCategoryOf(article);
   const editorialLabels = editorialTypeLabelsOf(article);
