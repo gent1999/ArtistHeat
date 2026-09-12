@@ -35,6 +35,8 @@ async function purgeBatch(zoneId: string, token: string, files: string[]): Promi
         errors: body?.errors,
         urlCount: files.length,
       });
+    } else {
+      console.log('[cloudflare-purge] purge_cache succeeded', { urlCount: files.length, urls: files });
     }
   } catch (err) {
     console.error('[cloudflare-purge] purge_cache request failed', {
