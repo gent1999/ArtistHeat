@@ -1,3 +1,11 @@
+export function FlameIcon({ className }: { className?: string }) {
+  return (
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" className={className} aria-hidden="true">
+      <path d="M12.5 2c.3 2.7-.7 4.3-2 5.8-1.4 1.6-2.9 3.3-2.9 6C7.6 17.7 9.9 20 12.7 20c3.2 0 6-2.2 6-5.8 0-2-.9-3.3-1.7-4.4-.1.9-.4 1.7-1.1 2.3-.2-2.6-1.3-4.9-3-6.6.3 1.5-.1 2.7-1 3.7-.2-2.8-1-5.1-.4-7.2Z" />
+    </svg>
+  );
+}
+
 export function StarIcon({ filled, className }: { filled: boolean; className?: string }) {
   return (
     <svg

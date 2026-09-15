@@ -19,3 +19,43 @@ body {
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
 }
+
+/* Trending bar ticker -- continuous marquee via transform, no JS.
+   TrendingBarTicker.tsx renders its items twice back-to-back; animating
+   translateX(0) to translateX(-50%) moves exactly one copy's width, so the
+   loop seam lands on an identical copy of itself and reads as seamless. */
+.ticker-viewport {
+  overflow: hidden;
+}
+
+.ticker-track {
+  width: max-content;
+  animation-name: ticker-scroll;
+  animation-timing-function: linear;
+  animation-iteration-count: infinite;
+}
+
+.ticker-viewport:hover .ticker-track {
+  animation-play-state: paused;
+}
+
+@keyframes ticker-scroll {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-50%);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ticker-track {
+    animation: none;
+  }
+  .ticker-viewport {
+    overflow-x: auto;
+  }
+  .ticker-track [data-ticker-dup] {
+    display: none;
+  }
+}
