@@ -24,7 +24,7 @@ export function TrendingBarTicker({ items }: { items: TrendingItem[] }) {
   const doubled = [...items, ...items];
 
   return (
-    <div className="ticker-viewport min-w-0 flex-1">
+    <div className="ticker-viewport flex min-w-0 flex-1 items-center">
       <div className="ticker-track flex items-center" style={{ animationDuration: `${duration}s` }}>
         {doubled.map((item, i) => {
           const isDuplicate = i >= items.length;
