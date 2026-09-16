@@ -8,7 +8,7 @@ export function NewsletterWidget() {
   const [message, setMessage] = useState<string | null>(null);
 
   return (
-    <div className="relative bg-[url('/newsletter-background.png')] bg-cover bg-center bg-no-repeat">
+    <div className="relative bg-[url('/newsletter-background2.png')] bg-cover bg-center bg-no-repeat">
       <div className="pointer-events-none absolute inset-0 bg-black/65" />
       <div className="relative z-10 p-5">
         <h2 className="mb-2 text-sm font-extrabold uppercase tracking-wide text-white">
