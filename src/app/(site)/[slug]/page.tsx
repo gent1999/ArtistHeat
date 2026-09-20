@@ -12,6 +12,7 @@ import {
   plainTextExcerpt,
 } from '@/lib/format';
 import { SITE_URL } from '@/lib/site';
+import { cloudinaryOgImage } from '@/lib/cloudinary';
 import { editorialTypeLabelsOf } from '@/lib/editorial-types';
 import { ShareBar } from '@/components/ShareBar';
 import { AuthorCard } from '@/components/AuthorCard';
@@ -67,7 +68,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   // own -- an article's openGraph/twitter blocks fully replace (not merge
   // with) the root layout's defaults, so without this an imageless article
   // would share with no preview image at all instead of inheriting one.
-  const shareImage = article.ogImageUrl || article.featuredImage?.sourceUrl || '/artistheat_banner.png';
+  const shareImage = cloudinaryOgImage(article.ogImageUrl || article.featuredImage?.sourceUrl || '/artistheat_banner.png');
   const canonicalUrl = article.canonicalUrl || `${SITE_URL}/${article.slug}`;
 
   return {
