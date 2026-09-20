@@ -84,6 +84,11 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       type: 'article',
       url: canonicalUrl,
       images: [shareImage],
+      // The root layout's openGraph.siteName doesn't carry over here --
+      // a page's own openGraph block fully replaces the layout's rather
+      // than merging with it, so without this Discord/X/etc. embeds show
+      // no site-name label above the title at all.
+      siteName: 'ArtistHeat',
     },
     twitter: {
       card: 'summary_large_image',
