@@ -9,6 +9,7 @@ import {
   parseSpotifyEmbedUrl,
   buildSoundcloudEmbedUrl,
   parseYoutubeEmbedUrl,
+  plainTextExcerpt,
 } from '@/lib/format';
 import { SITE_URL } from '@/lib/site';
 import { editorialTypeLabelsOf } from '@/lib/editorial-types';
@@ -58,12 +59,16 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   if (!article) return {};
 
   const title = article.seoTitle || article.title;
-  const description = article.seoDescription || article.excerpt || undefined;
+  // seoDescription/excerpt are almost never set in practice, so fall back to
+  // a plain-text snippet of the article body -- otherwise Discord/X/iMessage
+  // embeds render with just a title and image, no description text.
+  const description = article.seoDescription || article.excerpt || plainTextExcerpt(article.content);
   // Falls back to the site banner when the article has no image of its
   // own -- an article's openGraph/twitter blocks fully replace (not merge
   // with) the root layout's defaults, so without this an imageless article
   // would share with no preview image at all instead of inheriting one.
   const shareImage = article.ogImageUrl || article.featuredImage?.sourceUrl || '/artistheat_banner.png';
+  const canonicalUrl = article.canonicalUrl || `${SITE_URL}/${article.slug}`;
 
   return {
     title,
@@ -72,11 +77,12 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     // otherwise self-canonical to this article's own URL. Never leave
     // canonical unset -- an unset canonical is exactly what let Google
     // treat this page as having no stated identity.
-    alternates: { canonical: article.canonicalUrl || `${SITE_URL}/${article.slug}` },
+    alternates: { canonical: canonicalUrl },
     openGraph: {
       title,
       description,
       type: 'article',
+      url: canonicalUrl,
       images: [shareImage],
     },
     twitter: {

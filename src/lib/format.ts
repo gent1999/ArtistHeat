@@ -15,6 +15,18 @@ export function estimateReadingTimeMinutes(html: string): number {
   return Math.max(1, Math.round(words / 200));
 }
 
+// Share-preview description fallback for articles that have neither
+// seoDescription nor excerpt set (the vast majority, in practice -- almost
+// nothing migrated from WordPress) -- without this, Discord/X/iMessage
+// embeds render with just a title and image, no description text.
+export function plainTextExcerpt(html: string, maxLength = 160): string {
+  const text = html.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim();
+  if (text.length <= maxLength) return text;
+  const truncated = text.slice(0, maxLength);
+  const lastSpace = truncated.lastIndexOf(' ');
+  return `${truncated.slice(0, lastSpace > 0 ? lastSpace : maxLength)}…`;
+}
+
 const SPOTIFY_EMBED_TYPES = ['track', 'album', 'playlist', 'episode', 'show', 'artist'] as const;
 type SpotifyEmbedType = (typeof SPOTIFY_EMBED_TYPES)[number];
 
