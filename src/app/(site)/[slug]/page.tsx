@@ -121,7 +121,7 @@ export default async function ArticlePage({ params }: Props) {
   const youtubeEmbedUrl = parseYoutubeEmbedUrl(article.youtubeUrl);
 
   return (
-    <div className="mx-auto max-w-[1100px] px-4 py-8">
+    <div className="mx-auto max-w-[1460px] px-4 py-8">
       <nav className="mb-4 truncate text-xs font-semibold uppercase tracking-wide text-neutral-500">
         <Link href="/" className="hover:text-red-600">
           Home
