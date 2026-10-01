@@ -17,6 +17,7 @@ import { editorialTypeLabelsOf } from '@/lib/editorial-types';
 import { ShareBar } from '@/components/ShareBar';
 import { AuthorCard } from '@/components/AuthorCard';
 import { ArticleLatestPosts } from '@/components/ArticleLatestPosts';
+import { NewsletterWidget } from '@/components/NewsletterWidget';
 
 type Props = {
   params: Promise<{ slug: string }>;
@@ -131,7 +132,11 @@ export default async function ArticlePage({ params }: Props) {
 
       <div className="grid grid-cols-1 gap-10 lg:grid-cols-[1fr_320px]">
         <article>
-          <div className="relative block aspect-[4/3] overflow-hidden bg-neutral-900 sm:aspect-[16/9] lg:aspect-auto lg:h-[460px]">
+          <div className="grid grid-cols-1 gap-6 lg:grid-cols-[320px_1fr]">
+            <div className="hidden lg:block">
+              <NewsletterWidget />
+            </div>
+            <div className="relative block aspect-[4/3] overflow-hidden bg-neutral-900 sm:aspect-[16/9] lg:aspect-auto lg:h-[460px]">
             {article.featuredImage ? (
               // eslint-disable-next-line @next/next/no-img-element
               <img
@@ -168,6 +173,7 @@ export default async function ArticlePage({ params }: Props) {
                 <span aria-hidden="true">&bull;</span>
                 <span>{readingTime} min read</span>
               </div>
+            </div>
             </div>
           </div>
 
