@@ -130,13 +130,13 @@ export default async function ArticlePage({ params }: Props) {
         <span className="text-neutral-400">{article.title}</span>
       </nav>
 
-      <div className="grid grid-cols-1 gap-10 lg:grid-cols-[1fr_320px]">
+      <div className="grid grid-cols-1 gap-10 lg:grid-cols-[320px_1fr_320px]">
+        <aside className="hidden lg:flex lg:flex-col lg:gap-8">
+          <NewsletterWidget />
+        </aside>
+
         <article>
-          <div className="grid grid-cols-1 gap-6 lg:grid-cols-[320px_1fr]">
-            <div className="hidden lg:block">
-              <NewsletterWidget />
-            </div>
-            <div className="relative block aspect-[4/3] overflow-hidden bg-neutral-900 sm:aspect-[16/9] lg:aspect-auto lg:h-[460px]">
+          <div className="relative block aspect-[4/3] overflow-hidden bg-neutral-900 sm:aspect-[16/9] lg:aspect-auto lg:h-[460px]">
             {article.featuredImage ? (
               // eslint-disable-next-line @next/next/no-img-element
               <img
@@ -173,7 +173,6 @@ export default async function ArticlePage({ params }: Props) {
                 <span aria-hidden="true">&bull;</span>
                 <span>{readingTime} min read</span>
               </div>
-            </div>
             </div>
           </div>
 
