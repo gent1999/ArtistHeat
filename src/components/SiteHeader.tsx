@@ -16,7 +16,7 @@ const NAV_LINKS = [
 
 export function SiteHeader() {
   return (
-    <header className="border-b border-neutral-200">
+    <header className="border-b border-neutral-200 bg-white">
       <div className="mx-auto flex max-w-[1400px] items-center justify-between gap-6 px-4 py-3">
         <Link href="/" className="shrink-0">
           {/* eslint-disable-next-line @next/next/no-img-element */}

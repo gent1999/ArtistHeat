@@ -20,6 +20,47 @@ body {
   font-family: Arial, Helvetica, sans-serif;
 }
 
+/* Public-site fire-aesthetic background (SiteLayout's wrapping div only --
+   /admin never gets this). The source image concentrates its flame/smoke
+   art at its own edges around a clean white center, so bg-cover + centering
+   naturally frames page content without extra crop/position tuning. The
+   linear-gradient layer on top guarantees a fixed ~1480px white band stays
+   solid behind the content column itself (the widest page content maxes
+   out around 1460px) regardless of viewport width, so flames only ever
+   show in the actual empty margins outside the content, never creeping in
+   behind it. Disabled below the tablet breakpoint entirely -- there's no
+   margin left to show flames in on a narrow screen anyway, and skipping
+   the image avoids an unnecessary decode/paint cost on mobile. */
+.site-fire-bg {
+  background-color: var(--background);
+  background-image:
+    linear-gradient(
+      to right,
+      transparent 0,
+      transparent calc(50% - 764px),
+      var(--background) calc(50% - 740px),
+      var(--background) calc(50% + 740px),
+      transparent calc(50% + 764px),
+      transparent 100%
+    ),
+    url('/artistheat-fire-background.png');
+  background-repeat: no-repeat;
+  background-position: center top, center top;
+  background-size: 100% 100%, cover;
+}
+
+@media (min-width: 1024px) {
+  .site-fire-bg {
+    background-attachment: fixed, fixed;
+  }
+}
+
+@media (max-width: 767px) {
+  .site-fire-bg {
+    background-image: none;
+  }
+}
+
 /* Trending bar ticker -- continuous marquee via transform, no JS.
    TrendingBarTicker.tsx renders its items twice back-to-back; animating
    translateX(0) to translateX(-50%) moves exactly one copy's width, so the

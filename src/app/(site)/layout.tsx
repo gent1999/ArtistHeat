@@ -15,7 +15,7 @@ export default function SiteLayout({ children }: { children: React.ReactNode }) 
   const gaMeasurementId = process.env.GA_MEASUREMENT_ID;
 
   return (
-    <div className="flex min-h-full flex-col">
+    <div className="site-fire-bg flex min-h-full flex-col">
       <TrendingBar />
       <SiteHeader />
       <main className="flex-1">{children}</main>
