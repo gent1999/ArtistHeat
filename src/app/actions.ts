@@ -11,9 +11,10 @@ export async function subscribeNewsletterAction(
   formData: FormData
 ) {
   const email = String(formData.get('email') || '').trim();
+  const source = String(formData.get('source') || 'homepage_widget');
 
   try {
-    const { message } = await api.subscribeNewsletter(email, 'homepage_widget');
+    const { message } = await api.subscribeNewsletter(email, source);
     return { success: message };
   } catch (err) {
     if (err instanceof ApiError) return { error: err.message };

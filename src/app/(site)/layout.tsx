@@ -3,6 +3,7 @@ import { SiteHeader } from "@/components/SiteHeader";
 import { SiteFooter } from "@/components/SiteFooter";
 import { TrendingBar } from "@/components/TrendingBar";
 import { BackToTop } from "@/components/BackToTop";
+import { NewsletterPopup } from "@/components/NewsletterPopup";
 
 // Public-site chrome only -- deliberately not part of the root layout so
 // /admin doesn't inherit the trending bar/header/footer (or, below, GA
@@ -21,6 +22,7 @@ export default function SiteLayout({ children }: { children: React.ReactNode }) 
       <main className="flex-1">{children}</main>
       <SiteFooter />
       <BackToTop />
+      <NewsletterPopup />
       {gaMeasurementId ? <GoogleAnalytics gaId={gaMeasurementId} /> : null}
     </div>
   );
