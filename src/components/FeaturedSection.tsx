@@ -21,7 +21,30 @@ function FeaturedBadge() {
   );
 }
 
-function FeaturedHero({ article }: { article: ArticleSummary }) {
+// Progress bar on the hero showing time left until the next rotation --
+// `progressTick` changes every rotation, and changing it as the bar's React
+// `key` remounts the div so its CSS animation restarts from 0% each cycle
+// (a plain CSS transition wouldn't restart on its own without a style-prop
+// round-trip through 0 first).
+function RotationProgressBar({ tick, durationMs }: { tick: number; durationMs: number }) {
+  return (
+    <div className="absolute inset-x-0 top-0 z-10 h-[3px] bg-white/25">
+      <div
+        key={tick}
+        className="h-full bg-red-600"
+        style={{ animation: `featured-progress-fill ${durationMs}ms linear forwards` }}
+      />
+    </div>
+  );
+}
+
+function FeaturedHero({
+  article,
+  progress,
+}: {
+  article: ArticleSummary;
+  progress?: { tick: number; durationMs: number };
+}) {
   return (
     <Link
       href={`/${article.slug}`}
@@ -36,6 +59,7 @@ function FeaturedHero({ article }: { article: ArticleSummary }) {
             className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
           />
         ) : null}
+        {progress ? <RotationProgressBar tick={progress.tick} durationMs={progress.durationMs} /> : null}
         <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent" />
         <div className="absolute inset-x-0 bottom-0 flex flex-col gap-3 p-6">
           <FeaturedBadge />
@@ -102,11 +126,13 @@ export function FeaturedSection({ articles }: { articles: ArticleSummary[] }) {
 
   const [order, setOrder] = useState(rotatable);
   const [fading, setFading] = useState(false);
+  const [tick, setTick] = useState(0);
   const fadeTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
     setOrder(rotatable);
     setFading(false);
+    setTick(0);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [key]);
 
@@ -115,6 +141,7 @@ export function FeaturedSection({ articles }: { articles: ArticleSummary[] }) {
 
     const interval = setInterval(() => {
       setFading(true);
+      setTick((t) => t + 1);
       fadeTimeout.current = setTimeout(() => {
         setOrder((prev) => (prev.length < 2 ? prev : [...prev.slice(1), prev[0]]));
         setFading(false);
@@ -137,7 +164,10 @@ export function FeaturedSection({ articles }: { articles: ArticleSummary[] }) {
       className={`grid grid-cols-1 gap-4 transition-opacity ease-in-out lg:grid-cols-[7fr_2fr] ${fading ? 'opacity-0' : 'opacity-100'}`}
       style={{ transitionDuration: `${FADE_MS}ms` }}
     >
-      <FeaturedHero article={hero} />
+      <FeaturedHero
+        article={hero}
+        progress={rotatable.length >= 2 ? { tick, durationMs: ROTATION_INTERVAL_MS } : undefined}
+      />
       {sideArticles.length > 0 ? (
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-3 lg:flex lg:flex-col">
           {sideArticles.map((article) => (

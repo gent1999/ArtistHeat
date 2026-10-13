@@ -61,6 +61,18 @@ body {
   }
 }
 
+/* Featured-rail rotation progress bar (FeaturedSection.tsx) -- fills left
+   to right over the rotation interval, restarted each cycle by remounting
+   the element on a changed `key` rather than by re-triggering a transition. */
+@keyframes featured-progress-fill {
+  from {
+    width: 0%;
+  }
+  to {
+    width: 100%;
+  }
+}
+
 /* Trending bar ticker -- continuous marquee via transform, no JS.
    TrendingBarTicker.tsx renders its items twice back-to-back; animating
    translateX(0) to translateX(-50%) moves exactly one copy's width, so the
