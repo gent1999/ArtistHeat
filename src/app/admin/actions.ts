@@ -503,3 +503,28 @@ export async function updateHomepageSpotifyPlaylistAction(
   await purgeCloudflareUrls([`${SITE_URL}/`, `${SITE_URL}/heat-check`]);
   return {};
 }
+
+export async function sendNewsletterAction(
+  _prevState: { error?: string; success?: string; errors?: { email: string; error: string }[] } | undefined,
+  formData: FormData
+) {
+  const token = await getSessionToken();
+  if (!token) redirect('/admin/login');
+
+  const subject = String(formData.get('subject') || '').trim();
+  const introText = String(formData.get('introText') || '').trim() || null;
+  const imageUrl = String(formData.get('imageUrl') || '').trim();
+  const isTest = formData.get('isTest') === 'on';
+
+  if (!subject) return { error: 'Subject is required.' };
+  if (!imageUrl) return { error: 'A cover image is required.' };
+
+  try {
+    const result = await api.sendNewsletter({ subject, imageUrl, introText, isTest }, token);
+    revalidatePath('/admin/newsletter');
+    return { success: result.message, errors: result.errors.length ? result.errors : undefined };
+  } catch (err) {
+    if (err instanceof ApiError) return { error: err.message };
+    return { error: 'Something went wrong sending the newsletter. Try again.' };
+  }
+}

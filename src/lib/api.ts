@@ -305,6 +305,31 @@ export interface FinanceTransaction {
   created_at: string;
 }
 
+export interface NewsletterSubscriber {
+  id: number;
+  email: string;
+  isActive: boolean;
+  source: string | null;
+  subscribedAt: string;
+}
+
+export interface NewsletterSend {
+  id: number;
+  subject: string;
+  imageUrl: string | null;
+  introText: string | null;
+  recipientCount: number;
+  isTest: boolean;
+  sentAt: string;
+}
+
+export interface NewsletterSendInput {
+  subject: string;
+  imageUrl: string;
+  introText?: string | null;
+  isTest: boolean;
+}
+
 export interface FinanceSourceInput {
   name: string;
   type?: string;
@@ -585,4 +610,27 @@ export const api = {
     if (params.limit !== undefined) qs.set('limit', String(params.limit));
     return request<{ transactions: FinanceTransaction[] }>(`/api/finance/transactions?${qs}`, { token, cache: 'no-store' });
   },
+
+  // -- Newsletter -----------------------------------------------------------
+
+  subscribeNewsletter: (email: string, source?: string) =>
+    request<{ message: string; subscriber?: { email: string; subscribedAt: string } }>('/api/newsletter/subscribe', {
+      method: 'POST',
+      body: JSON.stringify({ email, source }),
+    }),
+
+  listSubscribers: (token: string) =>
+    request<{ subscribers: NewsletterSubscriber[]; count: number; activeCount: number }>(
+      '/api/newsletter/subscribers',
+      { token, cache: 'no-store' }
+    ),
+
+  listNewsletterSends: (token: string) =>
+    request<{ sends: NewsletterSend[] }>('/api/newsletter/sends', { token, cache: 'no-store' }),
+
+  sendNewsletter: (data: NewsletterSendInput, token: string) =>
+    request<{ sent: number; total: number; errors: { email: string; error: string }[]; message: string }>(
+      '/api/newsletter/send',
+      { method: 'POST', body: JSON.stringify(data), token }
+    ),
 };
