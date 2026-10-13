@@ -1,3 +1,6 @@
+'use client';
+
+import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import type { ArticleSummary } from '@/lib/api';
 import { formatDate } from '@/lib/format';
@@ -80,13 +83,60 @@ function FeaturedSideCard({ article }: { article: ArticleSummary }) {
   );
 }
 
+// Rotates the featured rail every ROTATION_INTERVAL_MS: the top side card
+// (1-star) becomes the new hero, the old hero drops to the bottom of the
+// 3-card stack, and the other two side cards each bump up one spot -- a
+// plain rotate-by-one on the array. FADE_MS is just the crossfade's own
+// duration, kept short relative to the interval so the swap reads as a
+// quick beat rather than a slow morph.
+const ROTATION_INTERVAL_MS = 5000;
+const FADE_MS = 400;
+const MAX_FEATURED = 4;
+
 export function FeaturedSection({ articles }: { articles: ArticleSummary[] }) {
-  if (articles.length === 0) return null;
-  const [hero, ...rest] = articles;
+  const rotatable = articles.slice(0, MAX_FEATURED);
+  // Stable string key for the *set* of featured articles, so the effects
+  // below resync/restart only when admin actually changes what's featured
+  // -- not on every rotation tick (which would otherwise reset the timer).
+  const key = rotatable.map((a) => a.id).join(',');
+
+  const [order, setOrder] = useState(rotatable);
+  const [fading, setFading] = useState(false);
+  const fadeTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    setOrder(rotatable);
+    setFading(false);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [key]);
+
+  useEffect(() => {
+    if (rotatable.length < 2) return;
+
+    const interval = setInterval(() => {
+      setFading(true);
+      fadeTimeout.current = setTimeout(() => {
+        setOrder((prev) => (prev.length < 2 ? prev : [...prev.slice(1), prev[0]]));
+        setFading(false);
+      }, FADE_MS);
+    }, ROTATION_INTERVAL_MS);
+
+    return () => {
+      clearInterval(interval);
+      if (fadeTimeout.current) clearTimeout(fadeTimeout.current);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [key]);
+
+  if (order.length === 0) return null;
+  const [hero, ...rest] = order;
   const sideArticles = rest.slice(0, 3);
 
   return (
-    <section className="grid grid-cols-1 gap-4 lg:grid-cols-[7fr_2fr]">
+    <section
+      className={`grid grid-cols-1 gap-4 transition-opacity ease-in-out lg:grid-cols-[7fr_2fr] ${fading ? 'opacity-0' : 'opacity-100'}`}
+      style={{ transitionDuration: `${FADE_MS}ms` }}
+    >
       <FeaturedHero article={hero} />
       {sideArticles.length > 0 ? (
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-3 lg:flex lg:flex-col">
