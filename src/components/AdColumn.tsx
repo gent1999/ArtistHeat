@@ -11,7 +11,6 @@ import type { AdBanner } from '@/lib/api';
 export function AdColumn({ banners }: { banners: AdBanner[] }) {
   return (
     <aside className="hidden flex-col gap-4 xl:flex">
-      <p className="text-[10px] font-bold tracking-widest text-neutral-400 uppercase">Advertisement</p>
       {banners.map((ad) => (
         <a
           key={ad.id}
