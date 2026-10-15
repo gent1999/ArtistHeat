@@ -504,6 +504,81 @@ export async function updateHomepageSpotifyPlaylistAction(
   return {};
 }
 
+export async function updateAdsEnabledAction(formData: FormData): Promise<{ error?: string }> {
+  const token = await getSessionToken();
+  if (!token) redirect('/admin/login');
+
+  try {
+    await api.updateSiteSettings({ adsEnabled: formData.get('adsEnabled') === 'on' }, token);
+  } catch (err) {
+    if (err instanceof ApiError) return { error: err.message };
+    return { error: 'Something went wrong saving that setting. Try again.' };
+  }
+
+  revalidatePath('/admin/ads');
+  revalidatePath('/');
+  await purgeCloudflareUrls([`${SITE_URL}/`]);
+  return {};
+}
+
+export async function createAdBannerAction(_prevState: { error?: string } | undefined, formData: FormData) {
+  const token = await getSessionToken();
+  if (!token) redirect('/admin/login');
+
+  const imageUrl = String(formData.get('imageUrl') || '').trim();
+  const linkUrl = String(formData.get('linkUrl') || '').trim();
+  const title = String(formData.get('title') || '').trim() || null;
+
+  if (!imageUrl) return { error: 'An image is required.' };
+  if (!linkUrl) return { error: 'A destination link is required.' };
+
+  try {
+    await api.createAdBanner({ imageUrl, linkUrl, title }, token);
+  } catch (err) {
+    if (err instanceof ApiError) return { error: err.message };
+    return { error: 'Something went wrong saving the ad. Try again.' };
+  }
+
+  revalidatePath('/admin/ads');
+  revalidatePath('/');
+  await purgeCloudflareUrls([`${SITE_URL}/`]);
+  return {};
+}
+
+export async function toggleAdBannerAction(id: number, isActive: boolean): Promise<{ error?: string }> {
+  const token = await getSessionToken();
+  if (!token) redirect('/admin/login');
+
+  try {
+    await api.updateAdBanner(id, { isActive }, token);
+  } catch (err) {
+    if (err instanceof ApiError) return { error: err.message };
+    return { error: 'Something went wrong updating that ad.' };
+  }
+
+  revalidatePath('/admin/ads');
+  revalidatePath('/');
+  await purgeCloudflareUrls([`${SITE_URL}/`]);
+  return {};
+}
+
+export async function deleteAdBannerAction(id: number): Promise<{ error?: string }> {
+  const token = await getSessionToken();
+  if (!token) redirect('/admin/login');
+
+  try {
+    await api.deleteAdBanner(id, token);
+  } catch (err) {
+    if (err instanceof ApiError) return { error: err.message };
+    return { error: 'Something went wrong deleting that ad.' };
+  }
+
+  revalidatePath('/admin/ads');
+  revalidatePath('/');
+  await purgeCloudflareUrls([`${SITE_URL}/`]);
+  return {};
+}
+
 export async function sendNewsletterAction(
   _prevState: { error?: string; success?: string; errors?: { email: string; error: string }[] } | undefined,
   formData: FormData

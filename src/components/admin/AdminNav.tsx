@@ -29,6 +29,9 @@ export function AdminNav({ isAdmin, articleCount }: { isAdmin: boolean; articleC
       <Link href="/admin/newsletter" className={navLinkClass}>
         Newsletter
       </Link>
+      <Link href="/admin/ads" className={navLinkClass}>
+        Ads
+      </Link>
 
       <SectionLabel>Finance</SectionLabel>
       <Link href="/admin/finance" className={navLinkClass}>

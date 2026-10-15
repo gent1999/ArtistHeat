@@ -123,6 +123,7 @@ export interface AdminAccount {
 
 export interface SiteSettings {
   homepageSpotifyPlaylistUrl: string | null;
+  adsEnabled: boolean;
 }
 
 export interface AnalyticsOverview {
@@ -328,6 +329,23 @@ export interface NewsletterSendInput {
   imageUrl: string;
   introText?: string | null;
   isTest: boolean;
+}
+
+export interface AdBanner {
+  id: number;
+  title: string | null;
+  imageUrl: string;
+  linkUrl: string;
+  isActive: boolean;
+  displayOrder: number;
+  createdAt: string;
+}
+
+export interface AdBannerInput {
+  title?: string | null;
+  imageUrl: string;
+  linkUrl: string;
+  displayOrder?: number;
 }
 
 export interface FinanceSourceInput {
@@ -633,4 +651,18 @@ export const api = {
       '/api/newsletter/send',
       { method: 'POST', body: JSON.stringify(data), token }
     ),
+
+  // -- Ads --------------------------------------------------------------
+
+  getAds: () => request<{ banners: AdBanner[] }>('/api/ads', { next: { revalidate: 300, tags: ['ads'] } }),
+
+  listAdBanners: (token: string) => request<{ banners: AdBanner[] }>('/api/ads/all', { token, cache: 'no-store' }),
+
+  createAdBanner: (data: AdBannerInput, token: string) =>
+    request<{ banner: AdBanner }>('/api/ads', { method: 'POST', body: JSON.stringify(data), token }),
+
+  updateAdBanner: (id: number, data: Partial<AdBannerInput> & { isActive?: boolean }, token: string) =>
+    request<{ banner: AdBanner }>(`/api/ads/${id}`, { method: 'PUT', body: JSON.stringify(data), token }),
+
+  deleteAdBanner: (id: number, token: string) => request<void>(`/api/ads/${id}`, { method: 'DELETE', token }),
 };

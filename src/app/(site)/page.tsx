@@ -5,6 +5,7 @@ import { EditorialSection } from '@/components/EditorialSection';
 import { FaceOfTheHeatSection } from '@/components/FaceOfTheHeatSection';
 import { HeatCheckSection } from '@/components/HeatCheckSection';
 import { Sidebar } from '@/components/Sidebar';
+import { AdColumn } from '@/components/AdColumn';
 import { SITE_URL } from '@/lib/site';
 
 // `absolute` bypasses the root layout's title.template ("%s | ArtistHeat")
@@ -21,13 +22,29 @@ export const metadata: Metadata = {
 };
 
 export default async function HomePage() {
-  const { featured, freshHeat, faceOfTheHeat, firstListen, heatCheckStories, nextUp, styleReport, mostHeated } =
-    await api.getHome();
+  const [
+    { featured, freshHeat, faceOfTheHeat, firstListen, heatCheckStories, nextUp, styleReport, mostHeated },
+    { settings },
+    { banners },
+  ] = await Promise.all([api.getHome(), api.getSiteSettings(), api.getAds()]);
+
+  // Gating on both the sitewide toggle AND at least one active banner here
+  // (rather than inside AdColumn) means the container/grid below only ever
+  // reserves the extra 300px column when something will actually render
+  // into it -- no empty gutter when ads are off or there's nothing to show.
+  const showAds = settings.adsEnabled && banners.length > 0;
 
   return (
-    <div className="mx-auto max-w-[1400px] px-4 pt-10 pb-6">
+    <div className={showAds ? 'mx-auto max-w-[1400px] px-4 pt-10 pb-6 xl:max-w-[1740px]' : 'mx-auto max-w-[1400px] px-4 pt-10 pb-6'}>
       <h1 className="sr-only">ArtistHeat</h1>
-      <div className="grid grid-cols-1 gap-10 lg:grid-cols-[1fr_320px]">
+      <div
+        className={
+          showAds
+            ? 'grid grid-cols-1 gap-10 lg:grid-cols-[1fr_320px] xl:grid-cols-[300px_1fr_320px]'
+            : 'grid grid-cols-1 gap-10 lg:grid-cols-[1fr_320px]'
+        }
+      >
+        {showAds ? <AdColumn banners={banners} /> : null}
         <div className="flex flex-col gap-10">
           <FeaturedSection articles={featured} />
           <EditorialSection
