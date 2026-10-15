@@ -37,6 +37,10 @@ export const metadata: Metadata = {
   ...(process.env.GOOGLE_SITE_VERIFICATION
     ? { verification: { google: process.env.GOOGLE_SITE_VERIFICATION } }
     : {}),
+  // DistroKid/Impact.com affiliate program site-ownership verification.
+  other: {
+    "impact-site-verification": "e4656130-dcb8-4bc5-a08f-de1c424f7374",
+  },
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
