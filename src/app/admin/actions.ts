@@ -515,6 +515,11 @@ export async function updateAdsEnabledAction(formData: FormData): Promise<{ erro
     return { error: 'Something went wrong saving that setting. Try again.' };
   }
 
+  // updateTag busts the Data Cache entry for api.getSiteSettings() itself --
+  // revalidatePath('/') alone only forces the homepage to re-render, but that
+  // re-render still reads the same (up to 1hr-stale) cached fetch result
+  // unless its tag is explicitly invalidated too.
+  updateTag('site-settings');
   revalidatePath('/admin/ads');
   revalidatePath('/');
   await purgeCloudflareUrls([`${SITE_URL}/`]);
@@ -539,6 +544,11 @@ export async function createAdBannerAction(_prevState: { error?: string } | unde
     return { error: 'Something went wrong saving the ad. Try again.' };
   }
 
+  // See the comment in updateAdsEnabledAction above -- api.getAds() is
+  // tagged 'ads' with its own revalidate window, so creating/hiding/deleting
+  // a banner has to bust that tag directly or the homepage keeps serving
+  // whatever banner list it last cached for up to 5 minutes.
+  updateTag('ads');
   revalidatePath('/admin/ads');
   revalidatePath('/');
   await purgeCloudflareUrls([`${SITE_URL}/`]);
@@ -556,6 +566,7 @@ export async function toggleAdBannerAction(id: number, isActive: boolean): Promi
     return { error: 'Something went wrong updating that ad.' };
   }
 
+  updateTag('ads');
   revalidatePath('/admin/ads');
   revalidatePath('/');
   await purgeCloudflareUrls([`${SITE_URL}/`]);
@@ -573,6 +584,7 @@ export async function deleteAdBannerAction(id: number): Promise<{ error?: string
     return { error: 'Something went wrong deleting that ad.' };
   }
 
+  updateTag('ads');
   revalidatePath('/admin/ads');
   revalidatePath('/');
   await purgeCloudflareUrls([`${SITE_URL}/`]);
