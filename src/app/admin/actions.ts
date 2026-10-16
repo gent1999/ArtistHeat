@@ -555,6 +555,35 @@ export async function createAdBannerAction(_prevState: { error?: string } | unde
   return {};
 }
 
+export async function updateAdBannerDetailsAction(
+  id: number,
+  _prevState: { error?: string } | undefined,
+  formData: FormData
+): Promise<{ error?: string }> {
+  const token = await getSessionToken();
+  if (!token) redirect('/admin/login');
+
+  const imageUrl = String(formData.get('imageUrl') || '').trim();
+  const linkUrl = String(formData.get('linkUrl') || '').trim();
+  const title = String(formData.get('title') || '').trim() || null;
+
+  if (!imageUrl) return { error: 'An image is required.' };
+  if (!linkUrl) return { error: 'A destination link is required.' };
+
+  try {
+    await api.updateAdBanner(id, { imageUrl, linkUrl, title }, token);
+  } catch (err) {
+    if (err instanceof ApiError) return { error: err.message };
+    return { error: 'Something went wrong saving the ad. Try again.' };
+  }
+
+  updateTag('ads');
+  revalidatePath('/admin/ads');
+  revalidatePath('/');
+  await purgeCloudflareUrls([`${SITE_URL}/`]);
+  return {};
+}
+
 export async function toggleAdBannerAction(id: number, isActive: boolean): Promise<{ error?: string }> {
   const token = await getSessionToken();
   if (!token) redirect('/admin/login');

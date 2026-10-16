@@ -4,6 +4,7 @@ import { useEffect, useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
 import type { AdBanner } from '@/lib/api';
 import { toggleAdBannerAction, deleteAdBannerAction, reorderAdBannersAction } from '../../actions';
+import { AdBannerEditModal } from './AdBannerEditModal';
 
 function BannerRow({
   ad,
@@ -90,6 +91,7 @@ function BannerRow({
 
       <div className="flex shrink-0 items-center gap-2">
         {error ? <span className="text-xs text-red-600">{error}</span> : null}
+        <AdBannerEditModal ad={ad} />
         <button
           type="button"
           onClick={handleToggle}
