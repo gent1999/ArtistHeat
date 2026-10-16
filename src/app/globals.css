@@ -32,6 +32,19 @@ body {
   }
 }
 
+/* Featured-rail rotation crossfade (FeaturedSection.tsx) -- the outgoing
+   article's image/overlay/text sits on top of the already-swapped-in new
+   content and fades out, revealing it underneath, rather than the whole
+   card fading to nothing and popping back in. */
+@keyframes featured-crossfade-out {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
+}
+
 /* Trending bar ticker -- continuous marquee via transform, no JS.
    TrendingBarTicker.tsx renders its items twice back-to-back; animating
    translateX(0) to translateX(-50%) moves exactly one copy's width, so the
