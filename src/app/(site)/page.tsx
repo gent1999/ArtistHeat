@@ -30,17 +30,17 @@ export default async function HomePage() {
 
   // Gating on both the sitewide toggle AND at least one active banner here
   // (rather than inside AdColumn) means the container/grid below only ever
-  // reserves the extra 300px column when something will actually render
+  // reserves the extra 220px column when something will actually render
   // into it -- no empty gutter when ads are off or there's nothing to show.
   const showAds = settings.adsEnabled && banners.length > 0;
 
   return (
-    <div className={showAds ? 'mx-auto max-w-[1400px] px-4 pt-10 pb-6 xl:max-w-[1740px]' : 'mx-auto max-w-[1400px] px-4 pt-10 pb-6'}>
+    <div className={showAds ? 'mx-auto max-w-[1400px] px-4 pt-10 pb-6 xl:max-w-[1660px]' : 'mx-auto max-w-[1400px] px-4 pt-10 pb-6'}>
       <h1 className="sr-only">ArtistHeat</h1>
       <div
         className={
           showAds
-            ? 'grid grid-cols-1 gap-10 lg:grid-cols-[1fr_320px] xl:grid-cols-[300px_1fr_320px]'
+            ? 'grid grid-cols-1 gap-10 lg:grid-cols-[1fr_320px] xl:grid-cols-[220px_1fr_320px]'
             : 'grid grid-cols-1 gap-10 lg:grid-cols-[1fr_320px]'
         }
       >

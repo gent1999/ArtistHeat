@@ -4,7 +4,7 @@ import type { AdBanner } from '@/lib/api';
 // there's at least one active banner (see (site)/page.tsx) -- this stays a
 // dumb presentational component so that decision lives in exactly one place.
 // Ads only ever appear at the `xl` breakpoint and up -- below that there's
-// no room to add a 300px column without squeezing the article rail or
+// no room to add a 220px column without squeezing the article rail or
 // sidebar, so this stays `hidden` (fully removed from grid layout, not just
 // visually collapsed) until xl. See (site)/page.tsx for the matching
 // grid-template-columns breakpoints this depends on lining up.
