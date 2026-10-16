@@ -591,6 +591,29 @@ export async function deleteAdBannerAction(id: number): Promise<{ error?: string
   return {};
 }
 
+// Takes the full banner order (as the admin list wants it, after a swap) and
+// writes displayOrder = its index for every banner in one go. Rewriting the
+// whole list rather than just the two swapped rows means it also normalizes
+// any banners still sitting at the default displayOrder: 0 the first time
+// anyone reorders, instead of requiring a separate one-time migration.
+export async function reorderAdBannersAction(orderedIds: number[]): Promise<{ error?: string }> {
+  const token = await getSessionToken();
+  if (!token) redirect('/admin/login');
+
+  try {
+    await Promise.all(orderedIds.map((id, index) => api.updateAdBanner(id, { displayOrder: index }, token)));
+  } catch (err) {
+    if (err instanceof ApiError) return { error: err.message };
+    return { error: 'Something went wrong saving the new order.' };
+  }
+
+  updateTag('ads');
+  revalidatePath('/admin/ads');
+  revalidatePath('/');
+  await purgeCloudflareUrls([`${SITE_URL}/`]);
+  return {};
+}
+
 export async function sendNewsletterAction(
   _prevState: { error?: string; success?: string; errors?: { email: string; error: string }[] } | undefined,
   formData: FormData
