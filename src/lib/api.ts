@@ -42,7 +42,7 @@ export interface ArticleSummary {
   featuredOrder?: number | null;
   isTrending?: boolean;
   isEditorsPick?: boolean;
-  author: { id: number; name: string; slug: string } | null;
+  author: { id: number; name: string; slug: string; avatarUrl: string | null } | null;
   featuredImage: { id: number; sourceUrl: string; altText: string | null } | null;
   articleCategories?: { isPrimary: boolean; category: { id: number; name: string; slug: string } }[];
   articleEditorialTypes?: { editorialType: string }[];
@@ -105,6 +105,7 @@ export interface Author {
   slug: string;
   email: string | null;
   bio: string | null;
+  avatarUrl: string | null;
 }
 
 export interface Media {
@@ -119,6 +120,8 @@ export interface AdminAccount {
   name: string;
   role: 'admin' | 'editor';
   createdAt: string;
+  authorId: number | null;
+  author: { id: number; name: string; slug: string; avatarUrl: string | null } | null;
 }
 
 export interface SiteSettings {
@@ -505,6 +508,12 @@ export const api = {
   createAuthor: (data: { name: string; slug: string }, token: string) =>
     request<{ author: Author }>('/api/authors', { method: 'POST', body: JSON.stringify(data), token }),
 
+  updateAuthor: (
+    id: number,
+    data: Partial<{ name: string; bio: string | null; avatarUrl: string | null }>,
+    token: string
+  ) => request<{ author: Author }>(`/api/authors/${id}`, { method: 'PUT', body: JSON.stringify(data), token }),
+
   createArticle: (data: ArticleWriteInput, token: string) =>
     request<{ article: ArticleDetail }>('/api/articles', { method: 'POST', body: JSON.stringify(data), token }),
 
@@ -520,7 +529,7 @@ export const api = {
 
   updateAdmin: (
     id: number,
-    data: Partial<{ email: string; name: string; role: 'admin' | 'editor'; password: string }>,
+    data: Partial<{ email: string; name: string; role: 'admin' | 'editor'; password: string; authorId: number | null }>,
     token: string
   ) => request<{ admin: AdminAccount }>(`/api/auth/admins/${id}`, { method: 'PATCH', body: JSON.stringify(data), token }),
 

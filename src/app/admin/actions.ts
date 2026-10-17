@@ -437,7 +437,12 @@ export async function createUserAction(_prevState: { error?: string } | undefine
   redirect('/admin/users');
 }
 
-export async function updateUserAction(userId: number, _prevState: { error?: string } | undefined, formData: FormData) {
+export async function updateUserAction(
+  userId: number,
+  currentAuthorId: number | null,
+  _prevState: { error?: string } | undefined,
+  formData: FormData
+) {
   const token = await getSessionToken();
   if (!token) redirect('/admin/login');
 
@@ -445,6 +450,9 @@ export async function updateUserAction(userId: number, _prevState: { error?: str
   const name = String(formData.get('name') || '').trim();
   const role = formData.get('role') === 'admin' ? 'admin' : 'editor';
   const password = String(formData.get('password') || '');
+  // Empty string means "no picture" (either never set, or explicitly
+  // cleared) -- normalized to null for the Author row.
+  const avatarUrl = String(formData.get('avatarUrl') || '').trim() || null;
 
   if (!email || !name) {
     return { error: 'Email and name are required.' };
@@ -455,6 +463,27 @@ export async function updateUserAction(userId: number, _prevState: { error?: str
 
   try {
     await api.updateAdmin(userId, { email, name, role, ...(password ? { password } : {}) }, token);
+
+    // The picture lives on the byline Author row articles actually
+    // reference, not on the login account -- only touch it if this user
+    // already has one linked, or they just uploaded a picture for the first
+    // time (skip author creation entirely on an unrelated profile edit with
+    // no picture involved). First-time linking reuses resolveAuthorId so it
+    // joins an existing byline with a matching name instead of creating a
+    // duplicate -- same matching the article form already relies on.
+    if (currentAuthorId) {
+      const { author } = await api.updateAuthor(currentAuthorId, { avatarUrl }, token);
+      updateTag('articles');
+      await purgeCloudflareUrls([`${SITE_URL}/`, `${SITE_URL}/author/${author.slug}`]);
+    } else if (avatarUrl) {
+      const newAuthorId = await resolveAuthorId(name, token);
+      if (newAuthorId) {
+        const { author } = await api.updateAuthor(newAuthorId, { avatarUrl }, token);
+        await api.updateAdmin(userId, { authorId: newAuthorId }, token);
+        updateTag('articles');
+        await purgeCloudflareUrls([`${SITE_URL}/`, `${SITE_URL}/author/${author.slug}`]);
+      }
+    }
   } catch (err) {
     if (err instanceof ApiError) return { error: err.message };
     return { error: 'Something went wrong saving the account. Try again.' };
