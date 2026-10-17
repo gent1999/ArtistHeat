@@ -18,6 +18,7 @@ import { ShareBar } from '@/components/ShareBar';
 import { AuthorCard } from '@/components/AuthorCard';
 import { ArticleLatestPosts } from '@/components/ArticleLatestPosts';
 import { NewsletterWidget } from '@/components/NewsletterWidget';
+import { AdColumn } from '@/components/AdColumn';
 
 type Props = {
   params: Promise<{ slug: string }>;
@@ -103,7 +104,11 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
 export default async function ArticlePage({ params }: Props) {
   const { slug } = await params;
-  const article = await loadArticle(slug);
+  const [article, { settings }, { banners }] = await Promise.all([
+    loadArticle(slug),
+    api.getSiteSettings(),
+    api.getAds(),
+  ]);
   if (!article) {
     const legacy = await findLegacyRedirect(`/${slug}`);
     if (legacy) {
@@ -119,6 +124,10 @@ export default async function ArticlePage({ params }: Props) {
   const spotifyEmbedUrl = parseSpotifyEmbedUrl(article.spotifyUrl);
   const soundcloudEmbedUrl = buildSoundcloudEmbedUrl(article.soundcloudUrl);
   const youtubeEmbedUrl = parseYoutubeEmbedUrl(article.youtubeUrl);
+  // Gating here (not inside AdColumn) keeps "is there anything to put in the
+  // left column" decided in one place -- when there's nothing to show, the
+  // grid collapses to 2 columns instead of reserving an empty 320px gutter.
+  const showAds = settings.adsEnabled && banners.length > 0;
 
   return (
     <div className="mx-auto max-w-[1460px] px-4 py-8">
@@ -130,10 +139,14 @@ export default async function ArticlePage({ params }: Props) {
         <span className="text-neutral-400">{article.title}</span>
       </nav>
 
-      <div className="grid grid-cols-1 gap-10 lg:grid-cols-[320px_1fr_320px]">
-        <aside className="hidden lg:flex lg:flex-col lg:gap-8">
-          <NewsletterWidget />
-        </aside>
+      <div
+        className={
+          showAds
+            ? 'grid grid-cols-1 gap-10 lg:grid-cols-[320px_1fr_320px]'
+            : 'grid grid-cols-1 gap-10 lg:grid-cols-[1fr_320px]'
+        }
+      >
+        {showAds ? <AdColumn banners={banners} className="hidden flex-col gap-4 lg:flex" /> : null}
 
         <article>
           <div className="relative block aspect-[4/3] overflow-hidden bg-neutral-900 sm:aspect-[16/9] lg:aspect-auto lg:h-[460px]">
@@ -255,6 +268,7 @@ export default async function ArticlePage({ params }: Props) {
         </article>
 
         <aside className="flex flex-col gap-8">
+          <NewsletterWidget />
           {article.author ? <AuthorCard author={article.author} /> : null}
           <ArticleLatestPosts excludeArticleId={article.id} />
         </aside>

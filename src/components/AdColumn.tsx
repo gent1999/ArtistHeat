@@ -1,16 +1,23 @@
 import type { AdBanner } from '@/lib/api';
 
-// Rendered only when the homepage has already confirmed ads are enabled and
-// there's at least one active banner (see (site)/page.tsx) -- this stays a
-// dumb presentational component so that decision lives in exactly one place.
-// Ads only ever appear at the `xl` breakpoint and up -- below that there's
-// no room to add a 220px column without squeezing the article rail or
-// sidebar, so this stays `hidden` (fully removed from grid layout, not just
-// visually collapsed) until xl. See (site)/page.tsx for the matching
-// grid-template-columns breakpoints this depends on lining up.
-export function AdColumn({ banners }: { banners: AdBanner[] }) {
+// Rendered only when the caller has already confirmed ads are enabled and
+// there's at least one active banner (see (site)/page.tsx and
+// (site)/[slug]/page.tsx) -- this stays a dumb presentational component so
+// that decision lives in exactly one place per page.
+//
+// `className` controls the responsive show/hide breakpoint, which differs by
+// page: the homepage only has room at `xl` without squeezing the article
+// rail/sidebar (default below), while the article page already reserves this
+// column at `lg` regardless of what's in it, so it passes its own override.
+export function AdColumn({
+  banners,
+  className = 'hidden flex-col gap-4 xl:flex',
+}: {
+  banners: AdBanner[];
+  className?: string;
+}) {
   return (
-    <aside className="hidden flex-col gap-4 xl:flex">
+    <aside className={className}>
       {banners.map((ad) => (
         <a
           key={ad.id}
