@@ -144,7 +144,7 @@ function FeaturedSideCard({
   return (
     <Link
       href={`/${article.slug}`}
-      className="group relative flex h-full min-h-[110px] bg-neutral-900 lg:h-[136px] lg:min-h-0"
+      className="group relative block aspect-[4/3] bg-neutral-900 sm:aspect-[16/11] lg:aspect-auto lg:h-[136px]"
     >
       <div className="absolute inset-0 overflow-hidden">
         <SideFace article={article} />
