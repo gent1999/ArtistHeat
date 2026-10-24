@@ -19,14 +19,17 @@ function shuffled<T>(items: T[]): T[] {
 // there's nothing to size-match against.
 const DESKTOP_QUERY = '(min-width: 1024px)';
 
-// Sizes the rail to the article in one measured pass instead of growing it
-// reactively: growing one card at a time off a live ResizeObserver meant
-// every image in the article body that loaded late (and nudged the
-// article's height) queued up another card, so the rail visibly kept
-// lengthening under the user as the page settled. Here we wait for the
-// article's own images to finish loading, measure once, and set a final
-// card count from the average height of whatever's already rendered --
-// no further growth after that.
+// Sizes the rail to the article's TEXT content in one measured pass instead
+// of growing it reactively: growing one card at a time off a live
+// ResizeObserver meant every image in the article body that loaded late
+// (and nudged the article's height) queued up another card, so the rail
+// visibly kept lengthening under the user as the page settled. Here we wait
+// for the article text's own images to finish loading, measure once, and
+// set a final card count from the average height of whatever's already
+// rendered -- no further growth after that. Targets #article-text (the
+// prose body) specifically, not the whole <article> -- the rail should end
+// where the writing ends, not run on through the Spotify/SoundCloud/YouTube
+// embeds, gallery, or tags that can follow it.
 export function RandomArticlesRail({ candidates }: { candidates: ArticleSummary[] }) {
   const [pool] = useState(() => shuffled(candidates));
   const [count, setCount] = useState(Math.min(3, pool.length));
@@ -36,9 +39,9 @@ export function RandomArticlesRail({ candidates }: { candidates: ArticleSummary[
     if (pool.length === 0) return;
     if (!window.matchMedia(DESKTOP_QUERY).matches) return;
 
-    const articleEl = document.querySelector('article');
+    const textEl = document.getElementById('article-text');
     const rail = railRef.current;
-    if (!articleEl || !rail) return;
+    if (!textEl || !rail) return;
 
     let cancelled = false;
 
@@ -48,16 +51,16 @@ export function RandomArticlesRail({ candidates }: { candidates: ArticleSummary[
       if (currentCount === 0) return;
       const avgCardHeight = rail.getBoundingClientRect().height / currentCount;
       if (avgCardHeight <= 0) return;
-      // Target the article's actual bottom edge, not just its raw height --
-      // the rail starts lower than the article (below the newsletter box
-      // and author card), so matching on height alone overshoots by
-      // whatever that leading offset is.
-      const targetHeight = articleEl.getBoundingClientRect().bottom - rail.getBoundingClientRect().top;
+      // Target the text's actual bottom edge, not just its raw height --
+      // the rail starts lower than the text (below the newsletter box and
+      // author card), so matching on height alone overshoots by whatever
+      // that leading offset is.
+      const targetHeight = textEl.getBoundingClientRect().bottom - rail.getBoundingClientRect().top;
       const needed = Math.min(pool.length, Math.max(currentCount, Math.ceil(targetHeight / avgCardHeight)));
       setCount(needed);
     };
 
-    const pendingImages = Array.from(articleEl.querySelectorAll('img')).filter((img) => !img.complete);
+    const pendingImages = Array.from(textEl.querySelectorAll('img')).filter((img) => !img.complete);
     let remaining = pendingImages.length;
     const onImageSettled = () => {
       remaining -= 1;

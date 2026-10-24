@@ -197,6 +197,7 @@ export default async function ArticlePage({ params }: Props) {
           <ShareBar title={article.title} imageUrl={article.featuredImage?.sourceUrl} />
 
           <div
+            id="article-text"
             className="prose prose-neutral mt-8 max-w-none prose-headings:font-bold prose-a:text-red-600"
             dangerouslySetInnerHTML={{ __html: article.content }}
           />
