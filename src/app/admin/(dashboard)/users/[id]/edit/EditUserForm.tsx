@@ -4,7 +4,7 @@ import { useActionState, useState } from 'react';
 import { useFormStatus } from 'react-dom';
 import { updateUserAction } from '../../../../actions';
 import { uploadImageToCloudinary } from '@/lib/upload';
-import type { AdminAccount } from '@/lib/api';
+import type { AdminAccount, Author } from '@/lib/api';
 
 function SubmitButton() {
   const { pending } = useFormStatus();
@@ -22,10 +22,11 @@ function SubmitButton() {
 const inputClass = 'w-full border border-neutral-300 px-3 py-2 text-sm focus:border-red-600 focus:outline-none';
 const labelClass = 'mb-1 block text-sm font-medium';
 
-export function EditUserForm({ user, isSelf }: { user: AdminAccount; isSelf: boolean }) {
+export function EditUserForm({ user, isSelf, authors }: { user: AdminAccount; isSelf: boolean; authors: Author[] }) {
   const updateWithId = updateUserAction.bind(null, user.id, user.authorId);
   const [state, formAction] = useActionState(updateWithId, undefined);
 
+  const [authorId, setAuthorId] = useState(user.authorId != null ? String(user.authorId) : '');
   const [avatarUrl, setAvatarUrl] = useState(user.author?.avatarUrl ?? '');
   const [uploading, setUploading] = useState(false);
   const [uploadError, setUploadError] = useState<string | null>(null);
@@ -46,6 +47,34 @@ export function EditUserForm({ user, isSelf }: { user: AdminAccount; isSelf: boo
   return (
     <form action={formAction} className="flex max-w-md flex-col gap-6">
       <input type="hidden" name="avatarUrl" value={avatarUrl} />
+
+      <div>
+        <label htmlFor="authorId" className={labelClass}>
+          Author (byline)
+        </label>
+        <select
+          id="authorId"
+          name="authorId"
+          value={authorId}
+          onChange={(e) => {
+            setAuthorId(e.target.value);
+            const matched = authors.find((a) => String(a.id) === e.target.value);
+            setAvatarUrl(matched?.avatarUrl ?? '');
+          }}
+          className={inputClass}
+        >
+          <option value="">— match by name / create new —</option>
+          {authors.map((a) => (
+            <option key={a.id} value={a.id}>
+              {a.name}
+            </option>
+          ))}
+        </select>
+        <p className="mt-1 text-xs text-neutral-500">
+          Articles are credited to a byline name, which can differ from this login's name. Pick the byline this
+          person actually writes under so their photo shows up on the right article pages.
+        </p>
+      </div>
 
       <div>
         <label className={labelClass}>

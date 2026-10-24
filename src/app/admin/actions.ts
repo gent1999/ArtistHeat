@@ -453,6 +453,10 @@ export async function updateUserAction(
   // Empty string means "no picture" (either never set, or explicitly
   // cleared) -- normalized to null for the Author row.
   const avatarUrl = String(formData.get('avatarUrl') || '').trim() || null;
+  // Explicit pick from the byline dropdown -- empty means "fall back to
+  // name-matching" (see below), not "unlink".
+  const authorIdRaw = String(formData.get('authorId') || '').trim();
+  const selectedAuthorId = authorIdRaw ? Number(authorIdRaw) : null;
 
   if (!email || !name) {
     return { error: 'Email and name are required.' };
@@ -465,24 +469,25 @@ export async function updateUserAction(
     await api.updateAdmin(userId, { email, name, role, ...(password ? { password } : {}) }, token);
 
     // The picture lives on the byline Author row articles actually
-    // reference, not on the login account -- only touch it if this user
-    // already has one linked, or they just uploaded a picture for the first
-    // time (skip author creation entirely on an unrelated profile edit with
-    // no picture involved). First-time linking reuses resolveAuthorId so it
-    // joins an existing byline with a matching name instead of creating a
-    // duplicate -- same matching the article form already relies on.
-    if (currentAuthorId) {
-      const { author } = await api.updateAuthor(currentAuthorId, { avatarUrl }, token);
+    // reference, not on the login account -- a login name ("Admin") and a
+    // byline name ("Jamal K") are often different people's names for the
+    // same person, so matching them by name isn't reliable. The dropdown
+    // lets the admin pick the byline directly; only fall back to
+    // resolveAuthorId's by-name match/create when nothing was picked.
+    const targetAuthorId = selectedAuthorId ?? (avatarUrl ? await resolveAuthorId(name, token) : currentAuthorId);
+
+    if (targetAuthorId) {
+      // Re-pointing to a different byline than before -- clear the photo
+      // off the old one so it doesn't linger there unused.
+      if (currentAuthorId && currentAuthorId !== targetAuthorId) {
+        await api.updateAuthor(currentAuthorId, { avatarUrl: null }, token);
+      }
+      const { author } = await api.updateAuthor(targetAuthorId, { avatarUrl }, token);
+      if (targetAuthorId !== currentAuthorId) {
+        await api.updateAdmin(userId, { authorId: targetAuthorId }, token);
+      }
       updateTag('articles');
       await purgeCloudflareUrls([`${SITE_URL}/`, `${SITE_URL}/author/${author.slug}`]);
-    } else if (avatarUrl) {
-      const newAuthorId = await resolveAuthorId(name, token);
-      if (newAuthorId) {
-        const { author } = await api.updateAuthor(newAuthorId, { avatarUrl }, token);
-        await api.updateAdmin(userId, { authorId: newAuthorId }, token);
-        updateTag('articles');
-        await purgeCloudflareUrls([`${SITE_URL}/`, `${SITE_URL}/author/${author.slug}`]);
-      }
     }
   } catch (err) {
     if (err instanceof ApiError) return { error: err.message };
