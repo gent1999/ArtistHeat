@@ -16,7 +16,7 @@ import { cloudinaryOgImage } from '@/lib/cloudinary';
 import { editorialTypeLabelsOf } from '@/lib/editorial-types';
 import { ShareBar } from '@/components/ShareBar';
 import { AuthorCard } from '@/components/AuthorCard';
-import { ArticleLatestPosts } from '@/components/ArticleLatestPosts';
+import { RandomArticlesRail } from '@/components/RandomArticlesRail';
 import { NewsletterWidget } from '@/components/NewsletterWidget';
 import { AdColumn } from '@/components/AdColumn';
 
@@ -104,10 +104,14 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
 export default async function ArticlePage({ params }: Props) {
   const { slug } = await params;
-  const [article, { settings }, { banners }] = await Promise.all([
+  const [article, { settings }, { banners }, { articles: candidateArticles }] = await Promise.all([
     loadArticle(slug),
     api.getSiteSettings(),
     api.getAds(),
+    // A generous candidate pool for the right rail -- it's shuffled and
+    // trimmed client-side in RandomArticlesRail, so this just needs to be
+    // large enough that a long article never runs out of cards to add.
+    api.listArticles({ pageSize: 30 }),
   ]);
   if (!article) {
     const legacy = await findLegacyRedirect(`/${slug}`);
@@ -128,6 +132,7 @@ export default async function ArticlePage({ params }: Props) {
   // left column" decided in one place -- when there's nothing to show, the
   // grid collapses to 2 columns instead of reserving an empty 320px gutter.
   const showAds = settings.adsEnabled && banners.length > 0;
+  const railCandidates = candidateArticles.filter((a) => a.id !== article.id);
 
   return (
     <div className="mx-auto max-w-[1460px] px-4 py-8">
@@ -270,7 +275,7 @@ export default async function ArticlePage({ params }: Props) {
         <aside className="flex flex-col gap-8">
           <NewsletterWidget />
           {article.author ? <AuthorCard author={article.author} /> : null}
-          <ArticleLatestPosts excludeArticleId={article.id} />
+          <RandomArticlesRail candidates={railCandidates} />
         </aside>
       </div>
     </div>
