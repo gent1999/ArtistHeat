@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { useEffect, useRef, useState } from 'react';
 import type { ArticleSummary } from '@/lib/api';
-import { formatDate, primaryCategoryOf } from '@/lib/format';
+import { primaryCategoryOf } from '@/lib/format';
 
 function shuffled<T>(items: T[]): T[] {
   const copy = [...items];
@@ -52,12 +52,12 @@ export function RandomArticlesRail({ candidates }: { candidates: ArticleSummary[
   if (visible.length === 0) return null;
 
   return (
-    <div ref={railRef} className="flex flex-col gap-4">
+    <div ref={railRef} className="flex flex-col gap-6">
       {visible.map((article) => {
         const category = primaryCategoryOf(article);
         return (
-          <Link key={article.id} href={`/${article.slug}`} className="group flex gap-3">
-            <span className="relative block h-20 w-24 shrink-0 overflow-hidden bg-neutral-100">
+          <Link key={article.id} href={`/${article.slug}`} className="group block">
+            <span className="relative block aspect-[16/10] w-full overflow-hidden bg-neutral-100">
               {article.featuredImage ? (
                 // eslint-disable-next-line @next/next/no-img-element
                 <img
@@ -67,15 +67,13 @@ export function RandomArticlesRail({ candidates }: { candidates: ArticleSummary[
                 />
               ) : null}
               {category ? (
-                <span className="absolute top-1 left-1 bg-red-600 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wide text-white">
+                <span className="absolute top-2 left-2 bg-red-600 px-2 py-1 text-[10px] font-bold uppercase tracking-wide text-white">
                   {category.name}
                 </span>
               ) : null}
             </span>
-            <div className="min-w-0">
-              <h3 className="line-clamp-3 text-sm font-semibold leading-snug group-hover:text-red-600">{article.title}</h3>
-              {article.publishedAt ? <div className="mt-1 text-xs text-neutral-500">{formatDate(article.publishedAt)}</div> : null}
-            </div>
+            <h3 className="mt-3 line-clamp-2 text-base font-semibold leading-snug group-hover:text-red-600">{article.title}</h3>
+            {article.excerpt ? <p className="mt-1 line-clamp-1 text-sm text-neutral-500">{article.excerpt}</p> : null}
           </Link>
         );
       })}
