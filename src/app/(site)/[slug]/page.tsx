@@ -147,8 +147,8 @@ export default async function ArticlePage({ params }: Props) {
       <div
         className={
           showAds
-            ? 'grid grid-cols-1 gap-10 lg:grid-cols-[320px_1fr_320px]'
-            : 'grid grid-cols-1 gap-10 lg:grid-cols-[1fr_320px]'
+            ? 'grid grid-cols-1 items-start gap-10 lg:grid-cols-[320px_1fr_320px]'
+            : 'grid grid-cols-1 items-start gap-10 lg:grid-cols-[1fr_320px]'
         }
       >
         {showAds ? <AdColumn banners={banners} className="hidden flex-col gap-4 lg:flex" /> : null}

@@ -14,39 +14,78 @@ function shuffled<T>(items: T[]): T[] {
   return copy;
 }
 
-// Fills the right rail with random article cards, one at a time, until it
-// catches up to the bottom of the <article> content next to it -- so the
-// rail keeps pace with however long the piece is instead of stopping short
-// or running past it. The shuffle happens on mount (client-side), so a new
-// random order shows up on every page view even though the candidate pool
-// itself is server-fetched and cached.
+// lg: in Tailwind's default theme -- below this, the page stacks into a
+// single column and the rail renders after (not beside) the article, so
+// there's nothing to size-match against.
+const DESKTOP_QUERY = '(min-width: 1024px)';
+
+// Sizes the rail to the article in one measured pass instead of growing it
+// reactively: growing one card at a time off a live ResizeObserver meant
+// every image in the article body that loaded late (and nudged the
+// article's height) queued up another card, so the rail visibly kept
+// lengthening under the user as the page settled. Here we wait for the
+// article's own images to finish loading, measure once, and set a final
+// card count from the average height of whatever's already rendered --
+// no further growth after that.
 export function RandomArticlesRail({ candidates }: { candidates: ArticleSummary[] }) {
   const [pool] = useState(() => shuffled(candidates));
   const [count, setCount] = useState(Math.min(3, pool.length));
   const railRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
+    if (pool.length === 0) return;
+    if (!window.matchMedia(DESKTOP_QUERY).matches) return;
+
     const articleEl = document.querySelector('article');
     const rail = railRef.current;
-    if (!articleEl || !rail || count >= pool.length) return;
+    if (!articleEl || !rail) return;
 
-    const check = () => {
-      const articleBottom = articleEl.getBoundingClientRect().bottom;
-      const railBottom = rail.getBoundingClientRect().bottom;
-      if (railBottom < articleBottom) {
-        setCount((c) => Math.min(c + 1, pool.length));
-      }
+    let cancelled = false;
+
+    const settle = () => {
+      if (cancelled) return;
+      const currentCount = rail.children.length;
+      if (currentCount === 0) return;
+      const avgCardHeight = rail.getBoundingClientRect().height / currentCount;
+      if (avgCardHeight <= 0) return;
+      // Target the article's actual bottom edge, not just its raw height --
+      // the rail starts lower than the article (below the newsletter box
+      // and author card), so matching on height alone overshoots by
+      // whatever that leading offset is.
+      const targetHeight = articleEl.getBoundingClientRect().bottom - rail.getBoundingClientRect().top;
+      const needed = Math.min(pool.length, Math.max(currentCount, Math.ceil(targetHeight / avgCardHeight)));
+      setCount(needed);
     };
 
-    check();
-    const observer = new ResizeObserver(check);
-    observer.observe(articleEl);
-    window.addEventListener('resize', check);
+    const pendingImages = Array.from(articleEl.querySelectorAll('img')).filter((img) => !img.complete);
+    let remaining = pendingImages.length;
+    const onImageSettled = () => {
+      remaining -= 1;
+      if (remaining <= 0) settle();
+    };
+
+    if (remaining === 0) {
+      settle();
+    } else {
+      pendingImages.forEach((img) => {
+        img.addEventListener('load', onImageSettled, { once: true });
+        img.addEventListener('error', onImageSettled, { once: true });
+      });
+    }
+
+    // Belt-and-suspenders in case something resizes the article without an
+    // <img> load event to key off of (a web font swap, an embed).
+    const fallback = setTimeout(settle, 1500);
+
     return () => {
-      observer.disconnect();
-      window.removeEventListener('resize', check);
+      cancelled = true;
+      clearTimeout(fallback);
+      pendingImages.forEach((img) => {
+        img.removeEventListener('load', onImageSettled);
+        img.removeEventListener('error', onImageSettled);
+      });
     };
-  }, [count, pool.length]);
+  }, [pool.length]);
 
   const visible = pool.slice(0, count);
   if (visible.length === 0) return null;
