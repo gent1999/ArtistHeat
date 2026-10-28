@@ -18,6 +18,7 @@ import { ShareBar } from '@/components/ShareBar';
 import { AuthorCard } from '@/components/AuthorCard';
 import { RandomArticlesRail } from '@/components/RandomArticlesRail';
 import { NewsletterWidget } from '@/components/NewsletterWidget';
+import { SpotifyPlaylistWidget } from '@/components/SpotifyPlaylistWidget';
 import { AdColumn } from '@/components/AdColumn';
 
 type Props = {
@@ -276,6 +277,7 @@ export default async function ArticlePage({ params }: Props) {
         <aside className="flex flex-col gap-8">
           <NewsletterWidget />
           {article.author ? <AuthorCard author={article.author} /> : null}
+          <SpotifyPlaylistWidget />
           <RandomArticlesRail candidates={railCandidates} />
         </aside>
       </div>

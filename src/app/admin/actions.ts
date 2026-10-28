@@ -532,8 +532,10 @@ export async function updateHomepageSpotifyPlaylistAction(
   updateTag('site-settings');
   revalidatePath('/admin/spotify');
   revalidatePath('/');
-  // The playlist embed appears on the homepage sidebar and /heat-check --
-  // see HomepageSpotifyWidget and src/app/(site)/heat-check/page.tsx.
+  // The playlist embed also appears on every article page (SpotifyPlaylistWidget)
+  // and the homepage sidebar/`/heat-check` -- article URLs aren't purged here
+  // (there are too many to enumerate), they just pick up the new playlist on
+  // their next natural revalidation like any other article-page content.
   await purgeCloudflareUrls([`${SITE_URL}/`, `${SITE_URL}/heat-check`]);
   return {};
 }

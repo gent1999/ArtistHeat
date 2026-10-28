@@ -1,7 +1,7 @@
 import { api } from '@/lib/api';
 import { parseSpotifyEmbedUrl } from '@/lib/format';
 
-export async function HomepageSpotifyWidget() {
+export async function SpotifyPlaylistWidget() {
   const { settings } = await api.getSiteSettings();
   const embedUrl = parseSpotifyEmbedUrl(settings.homepageSpotifyPlaylistUrl);
   if (!embedUrl) return null;

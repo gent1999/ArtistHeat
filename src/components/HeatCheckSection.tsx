@@ -4,9 +4,9 @@ import { ArticleCard } from '@/components/ArticleCard';
 import type { ArticleSummary } from '@/lib/api';
 
 // Branded homepage rail around the site-wide Heat Check playlist (managed
-// at /admin/spotify) -- the same embed also lives in the sidebar via
-// HomepageSpotifyWidget; this just gives it a bigger, editorial presence
-// alongside a few current music stories instead of leaving it sidebar-only.
+// at /admin/spotify) -- the same embed also lives via SpotifyPlaylistWidget
+// (homepage sidebar, article pages); this just gives it a bigger, editorial
+// presence alongside a few current music stories.
 export async function HeatCheckSection({ articles }: { articles: ArticleSummary[] }) {
   const { settings } = await api.getSiteSettings();
   const embedUrl = parseSpotifyEmbedUrl(settings.homepageSpotifyPlaylistUrl);
