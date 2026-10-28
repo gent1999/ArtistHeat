@@ -1,7 +1,6 @@
 import { NewsletterWidget } from '@/components/NewsletterWidget';
 import { FollowSocial } from '@/components/FollowSocial';
 import { HomepageSpotifyWidget } from '@/components/HomepageSpotifyWidget';
-import { TrendingThisWeek } from '@/components/TrendingThisWeek';
 import { SubmitMusicCta } from '@/components/SubmitMusicCta';
 
 // The "Follow ArtistHeat" fan/follower-count widget from the reference
@@ -13,7 +12,6 @@ export function Sidebar() {
     <aside className="flex flex-col gap-6">
       <NewsletterWidget />
       <HomepageSpotifyWidget />
-      <TrendingThisWeek />
       <FollowSocial />
       <SubmitMusicCta />
     </aside>
