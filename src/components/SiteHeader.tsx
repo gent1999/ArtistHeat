@@ -3,6 +3,9 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { SiteSearchBar } from '@/components/SiteSearchBar';
+import { InstagramIcon } from '@/components/icons';
+
+const INSTAGRAM_URL = 'https://instagram.com/pluggpress';
 
 // Reflects ArtistHeat's music/fashion-first direction rather than the old
 // site's flat list of every category. Legacy categories (Life, Money,
@@ -38,7 +41,18 @@ export function SiteHeader() {
             Submit Music
           </Link>
         </nav>
-        <SearchIcon active={searchOpen} onClick={() => setSearchOpen((v) => !v)} />
+        <div className="flex items-center gap-4">
+          <a
+            href={INSTAGRAM_URL}
+            target="_blank"
+            rel="noopener noreferrer"
+            aria-label="Instagram"
+            className="shrink-0 text-neutral-700 hover:text-red-600"
+          >
+            <InstagramIcon />
+          </a>
+          <SearchIcon active={searchOpen} onClick={() => setSearchOpen((v) => !v)} />
+        </div>
       </div>
       {/* Lives inside <header>, below the nav row -- opening it grows the
           header and naturally pushes <main> (the featured section, etc.)
