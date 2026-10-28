@@ -1,4 +1,8 @@
+'use client';
+
+import { useState } from 'react';
 import Link from 'next/link';
+import { SiteSearchBar } from '@/components/SiteSearchBar';
 
 // Reflects ArtistHeat's music/fashion-first direction rather than the old
 // site's flat list of every category. Legacy categories (Life, Money,
@@ -15,6 +19,8 @@ const NAV_LINKS = [
 ];
 
 export function SiteHeader() {
+  const [searchOpen, setSearchOpen] = useState(false);
+
   return (
     <header className="border-b border-neutral-200 bg-white">
       <div className="mx-auto flex max-w-[1400px] items-center justify-between gap-6 px-4 py-3">
@@ -32,19 +38,29 @@ export function SiteHeader() {
             Submit Music
           </Link>
         </nav>
-        <SearchIcon />
+        <SearchIcon active={searchOpen} onClick={() => setSearchOpen((v) => !v)} />
       </div>
+      {/* Lives inside <header>, below the nav row -- opening it grows the
+          header and naturally pushes <main> (the featured section, etc.)
+          down, same as any other block-flow sibling. */}
+      {searchOpen ? <SiteSearchBar onClose={() => setSearchOpen(false)} /> : null}
     </header>
   );
 }
 
-function SearchIcon() {
+function SearchIcon({ active, onClick }: { active: boolean; onClick: () => void }) {
   return (
-    <Link href="/search" className="shrink-0 text-neutral-700 hover:text-red-600" aria-label="Search">
+    <button
+      type="button"
+      onClick={onClick}
+      aria-label={active ? 'Close search' : 'Search'}
+      aria-expanded={active}
+      className={`shrink-0 hover:text-red-600 ${active ? 'text-red-600' : 'text-neutral-700'}`}
+    >
       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
         <circle cx="11" cy="11" r="7" />
         <path d="m21 21-4.3-4.3" />
       </svg>
-    </Link>
+    </button>
   );
 }
