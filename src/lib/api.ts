@@ -425,6 +425,7 @@ export const api = {
       isTrending?: boolean;
       isEditorsPick?: boolean;
       status?: 'draft' | 'published' | 'all';
+      q?: string;
     } = {},
     token?: string
   ) => {
@@ -438,6 +439,7 @@ export const api = {
     if (params.isTrending !== undefined) qs.set('isTrending', String(params.isTrending));
     if (params.isEditorsPick !== undefined) qs.set('isEditorsPick', String(params.isEditorsPick));
     if (params.status) qs.set('status', params.status);
+    if (params.q) qs.set('q', params.q);
     // Admin callers (token present) always need the current, uncached state
     // (e.g. the featured-toggle logic reading isFeatured counts mid-edit) --
     // only anonymous/public reads are safe to cache, since the Data Cache

@@ -3,11 +3,26 @@ import type { Pagination as PaginationData } from '@/lib/api';
 
 // Simple prev/next + page-number pager. Links are plain `?page=N` query
 // params (SEO-friendly, crawlable, no client JS required to navigate).
-export function Pagination({ basePath, pagination }: { basePath: string; pagination: PaginationData }) {
+// `extraQuery` carries along any other query params the base listing needs
+// (e.g. the search page's `q`) onto every page link.
+export function Pagination({
+  basePath,
+  pagination,
+  extraQuery,
+}: {
+  basePath: string;
+  pagination: PaginationData;
+  extraQuery?: Record<string, string>;
+}) {
   const { page, totalPages } = pagination;
   if (totalPages <= 1) return null;
 
-  const href = (p: number) => (p <= 1 ? basePath : `${basePath}?page=${p}`);
+  const href = (p: number) => {
+    const qs = new URLSearchParams(extraQuery);
+    if (p > 1) qs.set('page', String(p));
+    const query = qs.toString();
+    return query ? `${basePath}?${query}` : basePath;
+  };
   const pages = Array.from({ length: totalPages }, (_, i) => i + 1);
 
   return (
