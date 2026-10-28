@@ -23,7 +23,7 @@ export const metadata: Metadata = {
 
 export default async function HomePage() {
   const [
-    { featured, freshHeat, faceOfTheHeat, firstListen, heatCheckStories, nextUp, styleReport, mostHeated },
+    { featured, freshHeat, faceOfTheHeat, firstListen, nextUp, styleReport, mostHeated },
     { settings },
     { banners },
   ] = await Promise.all([api.getHome(), api.getSiteSettings(), api.getAds()]);
@@ -59,7 +59,7 @@ export default async function HomePage() {
             viewAllHref="/new-releases"
             articles={firstListen}
           />
-          <HeatCheckSection articles={heatCheckStories} />
+          <HeatCheckSection />
           <EditorialSection
             heading="Next Up"
             subtitle="Names you'll be hearing a lot more from."
