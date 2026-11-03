@@ -334,6 +334,29 @@ export interface NewsletterSendInput {
   isTest: boolean;
 }
 
+export interface MusicSubmission {
+  id: number;
+  artistName: string;
+  email: string;
+  title: string;
+  genre: string | null;
+  instagramUrl: string | null;
+  content: string;
+  youtubeUrl: string | null;
+  spotifyUrl: string | null;
+  soundcloudUrl: string | null;
+  appleMusicUrl: string | null;
+  imageUrl: string | null;
+  submissionType: 'free' | 'priority';
+  paymentAmount: number;
+  paymentId: string | null;
+  stripeSessionId: string | null;
+  paymentStatus: string;
+  submissionStatus: 'pending' | 'approved' | 'rejected';
+  createdAt: string;
+  updatedAt: string;
+}
+
 export interface AdBanner {
   id: number;
   title: string | null;
@@ -676,4 +699,16 @@ export const api = {
     request<{ banner: AdBanner }>(`/api/ads/${id}`, { method: 'PUT', body: JSON.stringify(data), token }),
 
   deleteAdBanner: (id: number, token: string) => request<void>(`/api/ads/${id}`, { method: 'DELETE', token }),
+
+  // -- Music Submissions ----------------------------------------------------
+
+  listSubmissions: (token: string) =>
+    request<{ submissions: MusicSubmission[]; count: number }>('/api/submissions', { token, cache: 'no-store' }),
+
+  updateSubmissionStatus: (id: number, status: 'pending' | 'approved' | 'rejected', token: string) =>
+    request<{ submission: MusicSubmission }>(`/api/submissions/${id}/status`, {
+      method: 'PUT',
+      body: JSON.stringify({ status }),
+      token,
+    }),
 };

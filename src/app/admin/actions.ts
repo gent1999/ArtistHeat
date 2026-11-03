@@ -656,6 +656,24 @@ export async function deleteAdBannerAction(id: number): Promise<{ error?: string
   return {};
 }
 
+export async function updateSubmissionStatusAction(
+  id: number,
+  status: 'pending' | 'approved' | 'rejected'
+): Promise<{ error?: string }> {
+  const token = await getSessionToken();
+  if (!token) redirect('/admin/login');
+
+  try {
+    await api.updateSubmissionStatus(id, status, token);
+  } catch (err) {
+    if (err instanceof ApiError) return { error: err.message };
+    return { error: 'Something went wrong updating that submission.' };
+  }
+
+  revalidatePath('/admin/submissions');
+  return {};
+}
+
 // Takes the full banner order (as the admin list wants it, after a swap) and
 // writes displayOrder = its index for every banner in one go. Rewriting the
 // whole list rather than just the two swapped rows means it also normalizes

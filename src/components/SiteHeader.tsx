@@ -37,7 +37,7 @@ export function SiteHeader() {
               {link.label}
             </Link>
           ))}
-          <Link href="/contact" className="bg-red-600 px-3 py-1.5 text-white hover:bg-red-700">
+          <Link href="/submit-music" className="bg-red-600 px-3 py-1.5 text-white hover:bg-red-700">
             Submit Music
           </Link>
         </nav>
